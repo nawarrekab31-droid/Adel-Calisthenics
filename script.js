@@ -1,296 +1,224 @@
-// 1. تهيئة Firebase بالمفاتيح الخاصة بك
+// التهيئة الخاصة بـ Firebase (استبدل الإعدادات ببيانات مشروعك إذا لزم الأمر)
 const firebaseConfig = {
-  apiKey: "AIzaSyAPSpTam0RuNuW4AhednhKVLyt8J9vubk4",
-  authDomain: "adel-calisthenics.firebaseapp.com",
-  databaseURL: "https://adel-calisthenics-default-rtdb.firebaseio.com",
-  projectId: "adel-calisthenics",
-  storageBucket: "adel-calisthenics.firebasestorage.app",
-  messagingSenderId: "51697754269",
-  appId: "1:51697754269:web:1ef5a4a63a8d94e2d83474",
-  measurementId: "G-QM3VRNNQCG"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
+// تهيئة Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 
-// تمكين المزامنة أثناء انقطاع الإنترنت (Offline Persistence)
-db.enablePersistence().catch(err => {
-    console.log("Offline persistence error: ", err.code);
+// تفعيل العمل أوفلاين مع معالجة التعدد
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+  if (err.code === 'failed-precondition') {
+    console.warn('تنبيه: التخزين المحلي يعمل في تبويب واحد فقط.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('المتصفح لا يدعم التخزين المحلي.');
+  }
 });
 
-// مراقبة حالة الاتصال بالإنترنت
+// الأحداث عند تغيير حالة الاتصال
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
 function updateOnlineStatus() {
-    const statusEl = document.getElementById('connectionStatus');
-    if (!statusEl) return;
+  const statusEl = document.getElementById('connectionStatus');
+  if (!statusEl) return;
 
-    if (navigator.onLine) {
-        statusEl.className = 'status-online';
-        statusEl.innerText = '🌐 متصل بالسحابة (مزامنة مباشرة)';
-    } else {
-        statusEl.className = 'status-offline';
-        statusEl.innerText = '📴 غير متصل (يعمل محلياً وسيتم الرفع فور الاتصال)';
-    }
+  if (navigator.onLine) {
+    statusEl.className = 'status-online';
+    statusEl.innerText = '🟢 متصل بالسحابة (مزامنة مباشرة)';
+  } else {
+    statusEl.className = 'status-offline';
+    statusEl.innerText = '🟠 غير متصل (يعمل محلياً وسيتم الرفع فور الاتصال)';
+  }
 }
 
-// الاستماع المباشر للتغييرات المزامنة بين تطبيق الموبايل والموقع
 document.addEventListener('DOMContentLoaded', () => {
-    updateOnlineStatus();
-    listenToPlans();
+  updateOnlineStatus();
+  listenToPlans();
 });
 
-let globalPlans = [];
+// الدالة الأساسية لتوليد الخطة الشاملة لليوم الواحد
+function generateAndSavePlan() {
+  const name = document.getElementById('clientName').value.trim();
+  const age = parseFloat(document.getElementById('clientAge').value) || 20;
+  const weight = parseFloat(document.getElementById('clientWeight').value) || 70;
+  const height = parseFloat(document.getElementById('clientHeight').value) || 170;
 
-function listenToPlans() {
-    db.collection("calisthenics_plans").orderBy("updatedAt", "desc")
-      .onSnapshot(snapshot => {
-          globalPlans = [];
-          snapshot.forEach(doc => {
-              globalPlans.push({ id: doc.id, ...doc.data() });
-          });
-          renderSavedPlansList(globalPlans);
-      });
-}
+  if (!name) {
+    alert('يرجى أدخل اسم المتدرب أولاً!');
+    return;
+  }
 
-function generateAndSaveProgram() {
-    const clientName = document.getElementById('clientName').value.trim();
-    if (!clientName) {
-        alert('يرجى إدخال اسم المتدرب أولاً');
-        return;
-    }
+  // المهارات
+  const targetSkill = document.getElementById('targetSkill').value;
+  const skillHold = parseFloat(document.getElementById('skillHoldTime').value) || 0;
+  const skillReps = parseFloat(document.getElementById('skillReps').value) || 0;
 
-    const inputs = {
-        clientName,
-        pullups: parseInt(document.getElementById('pullups').value) || 0,
-        hangTime: parseInt(document.getElementById('hangTime').value) || 0,
-        pushups: parseInt(document.getElementById('pushups').value) || 0,
-        dips: parseInt(document.getElementById('dips').value) || 0,
-        dipsType: document.getElementById('dipsType').value,
-        squatJumps: parseInt(document.getElementById('squatJumps').value) || 0,
-        plank: parseInt(document.getElementById('plank').value) || 0,
-        hollowBody: parseInt(document.getElementById('hollowBody').value) || 0,
-        superman: parseInt(document.getElementById('superman').value) || 0,
-        dipSkill: document.getElementById('dipSkill').value,
-        pushSkill: document.getElementById('pushSkill').value
-    };
+  // نتائج القوة
+  const pullups = parseFloat(document.getElementById('pullups').value) || 0;
+  const dips = parseFloat(document.getElementById('dips').value) || 0;
+  const pushups = parseFloat(document.getElementById('pushups').value) || 0;
+  const squats = parseFloat(document.getElementById('squats').value) || 0;
+  const plank = parseFloat(document.getElementById('plank').value) || 0;
+  const hollow = parseFloat(document.getElementById('hollow').value) || 0;
+  const superman = parseFloat(document.getElementById('superman').value) || 0;
+  const hang = parseFloat(document.getElementById('hang').value) || 0;
 
-    const editingId = document.getElementById('editingPlanId').value;
-    const planData = {
-        inputs: inputs,
-        date: new Date().toLocaleDateString('ar-EG'),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+  // حساب معامل الشدة بناءً على كتلة الجسم والعمر
+  const bmi = weight / ((height / 100) * (height / 100));
+  let intensity = 1.0;
+  if (bmi > 25) intensity -= 0.1;
+  if (age > 35) intensity -= 0.1;
 
-    if (editingId) {
-        db.collection("calisthenics_plans").doc(editingId).set(planData, { merge: true });
+  // --- 1. بناء قسم المهارة (Skill Section) ---
+  let skillExercises = [];
+  if (targetSkill === 'handstand') {
+    if (skillHold < 10) {
+      skillExercises = [
+        `1. هاندستاند على الحائط (البطن للجدار): 2 × ${Math.max(10, Math.round(20 * intensity))} ثانية`,
+        `2. هاندستاند على الحائط رأس ومحاولات: 4 × 20 ثانية`,
+        `3. نقل الوزن بين اليدين (هاندستاند ساند): 2 × 20 ثانية`,
+        `4. محاولات هاندستاند دخول + خروج سليم: 4 محاولات`
+      ];
     } else {
-        db.collection("calisthenics_plans").add(planData);
+      skillExercises = [
+        `1. نقل الوزن بين اليدين هاندستاند حر: 3 × 20-25 ثانية`,
+        `2. محاولات هاندستاند حر (بدون جدار): ${Math.max(5, skillReps || 8)} محاولات مركزة`,
+        `3. الثبات والاتزان العالي: 3 × ${skillHold} ثانية`
+      ];
     }
-
-    displayProgram(inputs);
-
-    // إعادة ضبط النموذج
-    document.getElementById('editingPlanId').value = '';
-    document.getElementById('formTitle').innerText = '📝 أدخل نتائج اختبارات المتدرب';
-}
-
-function renderSavedPlansList(plans) {
-    const container = document.getElementById('savedPlansList');
-
-    if (plans.length === 0) {
-        container.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
-        return;
-    }
-
-    container.innerHTML = '';
-    plans.forEach(plan => {
-        container.innerHTML += `
-            <div class="plan-item">
-                <div>
-                    <h4>${plan.inputs.clientName}</h4>
-                    <p>التاريخ: ${plan.date || ''}</p>
-                </div>
-                <div class="plan-actions">
-                    <button class="btn-sm btn-edit" onclick="editPlan('${plan.id}')">✏️ تعديل</button>
-                    <button class="btn-sm btn-delete" onclick="deletePlan('${plan.id}')">🗑️ حذف</button>
-                </div>
-            </div>
-        `;
-    });
-}
-
-function editPlan(id) {
-    const plan = globalPlans.find(p => p.id === id);
-    if (!plan) return;
-
-    const inp = plan.inputs;
-    document.getElementById('editingPlanId').value = plan.id;
-    document.getElementById('clientName').value = inp.clientName;
-    document.getElementById('pullups').value = inp.pullups;
-    document.getElementById('hangTime').value = inp.hangTime;
-    document.getElementById('pushups').value = inp.pushups;
-    document.getElementById('dips').value = inp.dips;
-    document.getElementById('dipsType').value = inp.dipsType;
-    document.getElementById('squatJumps').value = inp.squatJumps;
-    document.getElementById('plank').value = inp.plank;
-    document.getElementById('hollowBody').value = inp.hollowBody;
-    document.getElementById('superman').value = inp.superman;
-    document.getElementById('dipSkill').value = inp.dipSkill;
-    document.getElementById('pushSkill').value = inp.pushSkill;
-
-    document.getElementById('formTitle').innerText = '✏️ تعديل خطة: ' + inp.clientName;
-    displayProgram(inp);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function deletePlan(id) {
-    if (!confirm('هل أنت متأكد من حذف هذه الخطة كلياً من السحابة؟')) return;
-    db.collection("calisthenics_plans").doc(id).delete();
-}
-
-function displayProgram(inp) {
-    document.getElementById('displayClientName').innerText = inp.clientName;
-
-    const daysData = [
-        {
-            title: 'اليوم الأول: سحب (Pull)',
-            exercises: [
-                { name: 'إحماء وإطالة', details: '10 دقائق' },
-                { name: 'عقلة / سحب', details: getPullProgram(inp.pullups) },
-                { name: 'سحب أفقي (أسترالي)', details: '3 - 4 جولات' },
-                { name: 'التعليق', details: getHangProgram(inp.hangTime) },
-                { name: 'هولو بودي', details: getHollowProgram(inp.hollowBody) },
-                { name: 'سوبرمان', details: getSupermanProgram(inp.superman) }
-            ]
-        },
-        {
-            title: 'اليوم الثاني: دفع (Push)',
-            exercises: [
-                { name: 'إحماء وإطالة', details: '10 دقائق' },
-                { name: 'ضغط (Push-ups)', details: getPushProgram(inp.pushups) },
-                { name: 'المتوازي (Dips)', details: getDipsProgram(inp.dips, inp.dipsType) },
-                { name: 'تمارين ساعد', details: '3 جولات' },
-                { name: 'بلانك', details: Math.round(inp.plank * 0.7) + ' ثانية (3-4 جولات)' },
-                { name: 'هولو بودي', details: getHollowProgram(inp.hollowBody) }
-            ]
-        },
-        {
-            title: 'اليوم الثالث: أرجل وجذع (Legs & Core)',
-            exercises: [
-                { name: 'إحماء وإطالة', details: '10 دقائق' },
-                { name: 'قفز السكوات', details: getSquatsProgram(inp.squatJumps) },
-                { name: 'لونجز', details: '3 جولات' },
-                { name: 'بلانك', details: Math.round(inp.plank * 0.7) + ' ثانية (3-4 جولات)' },
-                { name: 'هولو بودي', details: getHollowProgram(inp.hollowBody) },
-                { name: 'سوبرمان', details: getSupermanProgram(inp.superman) }
-            ]
-        }
+  } else if (targetSkill === 'parallel_hold') {
+    skillExercises = [
+      `1. تثبيت التطور على الثابت: 4 × ${skillHold > 0 ? skillHold : '8-12'} ثانية`,
+      `2. رفع الركبتين باتجاه الصدر مع تحكم: 3 × 6-8 عدات`,
+      `3. محاولات عقلة بمساعدة استك: 5 × 3 عدات`
     ];
+  } else {
+    skillExercises = [
+      `1. ثبات التعلق المباشر: 3 × ${hang > 0 ? hang : '15-20'} ثانية`,
+      `2. سحب لوحي الكتف مع تثبيت: 3 × 8 عدات`,
+      `3. محاولات تثبيت المهارة: 4 × 10 ثوانٍ`
+    ];
+  }
 
-    renderTables(daysData);
-    document.getElementById('resultsSection').classList.remove('style-hidden');
-    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+  // --- 2. بناء قسم القوة (Strength Section) ---
+  let strengthExercises = [];
+
+  // تمارين السحب والدفع
+  if (pullups < 5) {
+    strengthExercises.push(`1. ثابت سلبي: 3 × 2 (نزول بطيء 5 ثوانٍ)`);
+    strengthExercises.push(`2. سحب أسترالي: 3 × 10-12 عدات`);
+    strengthExercises.push(`3. سحب لوحي الكتف: 3 × 8-10 عدات`);
+  } else {
+    strengthExercises.push(`1. العقلة الأساسية: 4 × ${Math.max(3, Math.round(pullups * 0.7))} عدات`);
+    strengthExercises.push(`2. سحب أسترالي: 3 × 12 عادة`);
+  }
+
+  if (dips < 8) {
+    strengthExercises.push(`4. المتوازي (Dips): 3 × 6-8 عدات`);
+    strengthExercises.push(`5. الضغط (Push-ups): 3 × 10-12 عدات (أو ضغط مائل/ركب)`);
+  } else {
+    strengthExercises.push(`3. المتوازي: 4 × ${Math.max(4, Math.round(dips * 0.75))} عدات`);
+    strengthExercises.push(`4. ضغط بايك (Pike Pushups): 3 × 6-8 عدات`);
+  }
+
+  // تمارين الأرجل والجذع (Core & Legs)
+  strengthExercises.push(`6. سكوات قفز: 3 × ${squats > 0 ? Math.min(squats, 20) : '15'} عادة`);
+  strengthExercises.push(`7. هولو بودي: 3 × ${hollow > 0 ? hollow : '20-25'} ثانية`);
+  strengthExercises.push(`8. بلانك: 2 × ${plank > 0 ? Math.min(plank, 60) : '45-60'} ثانية`);
+  if (superman > 0) {
+    strengthExercises.push(`9. سوبرمان: 2 × ${superman} ثانية`);
+  }
+
+  // كائن الخطة الكاملة
+  const planData = {
+    clientName: name,
+    age: age,
+    weight: weight,
+    height: height,
+    bmi: bmi.toFixed(1),
+    date: new Date().toLocaleDateString('ar-EG'),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    skillSection: skillExercises,
+    strengthSection: strengthExercises
+  };
+
+  // حفظ الخطة في Firestore
+  db.collection('calisthenics_plans').add(planData)
+    .then(() => {
+      displayGeneratedPlan(planData);
+    })
+    .catch((error) => {
+      console.error("خطأ في الحفظ السحابي: ", error);
+      displayGeneratedPlan(planData); // الاستمرار في العرض محلياً
+    });
 }
 
-function getPullProgram(reps) {
-    if (reps < 1) return 'سلبية + سحب أفقي (5 × 2-3 عُدّات)';
-    if (reps <= 3) return '5 × 2-3 عُدّات (50-70%)';
-    if (reps <= 6) return '5 × 3-4 عُدّات (50-70%)';
-    if (reps <= 9) return '5 × 5-7 عُدّات (50-70%)';
-    if (reps <= 12) return '5 × 7-9 عُدّات (50-70%)';
-    if (reps <= 15) return '5 × 9-11 عُدّات (50-70%)';
-    return '5 × 10+ عُدّات أو زيادة وزن';
+// عرض الخطة على الشاشة
+function displayGeneratedPlan(plan) {
+  const outputDiv = document.getElementById('planOutput');
+  outputDiv.classList.remove('hidden');
+
+  outputDiv.innerHTML = `
+    <h2>📋 الخطة التدريبية اليومية المتكاملة</h2>
+    <p><strong>المتدرب:</strong> ${plan.clientName} | <strong>العمر:</strong> ${plan.age} سنة | <strong>الوزن:</strong> ${plan.weight} كغم | <strong>الطول:</strong> ${plan.height} سم (BMI: ${plan.bmi})</p>
+    <p><strong>التاريخ:</strong> ${plan.date}</p>
+    <hr>
+    
+    <div class="plan-section">
+      <h3>🎯 قسم المهارة (Skill Section)</h3>
+      <ul>
+        ${plan.skillSection.map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>
+
+    <div class="plan-section">
+      <h3>💪 قسم القوة والبناء (Strength & Conditioning)</h3>
+      <ul>
+        ${plan.strengthSection.map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>
+  `;
 }
 
-function getPushProgram(reps) {
-    if (reps < 10) return '5 × 4-5 عُدّات (ركب أو مائل)';
-    if (reps <= 15) return '5 × 8-10 عُدّات';
-    if (reps <= 20) return '5 × 10 عُدّات';
-    if (reps <= 30) return '5 × 15 عُدّات';
-    if (reps <= 40) return '5 × 20 عُدّات';
-    return '5 × 20+ عُدّات أشكال أصعب';
-}
-
-function getDipsProgram(reps, type) {
-    if (type === 'negative') {
-        if (reps <= 3) return '5 × 2 نزول فقط';
-        if (reps <= 6) return '5 × 3-4 نزول فقط';
-        if (reps <= 10) return '5 × 4-6 نزول فقط';
-        return '5 × 7-10 نزول فقط';
+// المزامنة والاستماع للخطط المحفوظة في القائمة
+function listenToPlans() {
+  db.collection('calisthenics_plans').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+    const listDiv = document.getElementById('plansList');
+    if (snapshot.empty) {
+      listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
+      return;
     }
-    if (reps <= 3) return '5 × 2 عدات متوازي';
-    if (reps <= 6) return '5 × 3-4 عدات';
-    if (reps <= 10) return '5 × 6-7 عدات';
-    if (reps <= 15) return '5 × 8-10 عدات';
-    return '5 × 10-12 عدات';
-}
 
-function getSquatsProgram(reps) {
-    if (reps < 15) return '5 × 8 عدات';
-    if (reps <= 25) return '5 × 12 عدات';
-    if (reps <= 35) return '5 × 18 عدات';
-    return '5 × 22 عدات';
-}
-
-function getHangProgram(sec) {
-    if (sec < 20) return '4 × 15-20 ثانية';
-    if (sec <= 40) return '4 × 25-30 ثانية';
-    if (sec <= 60) return '4 × 35-40 ثانية';
-    return '4 × 40-45 ثانية';
-}
-
-function getHollowProgram(sec) {
-    if (sec <= 20) return '2 × 10 ثواني';
-    if (sec <= 45) return '2 × 30 ثانية';
-    return '3 × 40 ثانية';
-}
-
-function getSupermanProgram(sec) {
-    return `2-4 جولات × ${Math.round(sec * 0.7)} ثانية`;
-}
-
-function renderTables(days) {
-    const container = document.getElementById('programTables');
-    container.innerHTML = '';
-
-    days.forEach(day => {
-        let html = `
-            <div class="day-box">
-                <h3>${day.title}</h3>
-                <table class="exercise-table">
-                    <thead>
-                        <tr><th>التمرين</th><th>تفاصيل الخطة</th></tr>
-                    </thead>
-                    <tbody>
-        `;
-        day.exercises.forEach(ex => {
-            html += `
-                <tr>
-                    <td><input type="text" value="${ex.name}"></td>
-                    <td><input type="text" value="${ex.details}"></td>
-                </tr>
-            `;
-        });
-        html += `</tbody></table></div>`;
-        container.innerHTML += html;
+    let html = '';
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      html += `
+        <div class="plan-item">
+          <h4>${data.clientName}</h4>
+          <p>التاريخ: ${data.date || 'اليوم'}</p>
+          <div class="item-actions">
+            <button onclick="viewPlan('${doc.id}')" class="btn-sm">عرض الخطة</button>
+            <button onclick="deletePlan('${doc.id}')" class="btn-sm btn-danger">حذف</button>
+          </div>
+        </div>
+      `;
     });
+    listDiv.innerHTML = html;
+  });
 }
 
-function copyWhatsAppFormat() {
-    const clientName = document.getElementById('displayClientName').innerText;
-    let text = `🏋️‍♂️ *البرنامج التدريبي المخصص لـ: ${clientName}*\n\n`;
-
-    const dayBoxes = document.querySelectorAll('.day-box');
-    dayBoxes.forEach(box => {
-        text += `📌 *${box.querySelector('h3').innerText}*\n`;
-        box.querySelectorAll('tbody tr').forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            text += `• ${inputs[0].value}: ${inputs[1].value}\n`;
-        });
-        text += `\n`;
-    });
-
-    navigator.clipboard.writeText(text).then(() => alert('تم النسخ للواتساب!'));
+// حذف خطة
+function deletePlan(id) {
+  if (confirm("هل أنت تأكد من حذف هذه الخطة؟")) {
+    db.collection('calisthenics_plans').doc(id).delete();
+  }
 }
