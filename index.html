@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة التدريب - الكاليسثانيكس</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>🏋️‍♂️ برنامج الكاليسثانيكس الاحترافي</h1>
+                <p>مولّد وحافظ الخطط التدريبية للمدربين</p>
+            </div>
+        </header>
+
+        <!-- أرشيف الخطط المحفوظة -->
+        <section class="card archive-section">
+            <h2>📂 أرشيف خطط المتدربين المحفوظة</h2>
+            <div id="savedPlansList" class="saved-plans-grid">
+                <p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>
+            </div>
+        </section>
+
+        <!-- نموذج إدخال البيانات -->
+        <section class="card input-section">
+            <h2 id="formTitle">📝 أدخل نتائج اختبارات المتدرب</h2>
+            <form id="trainerForm">
+                <input type="hidden" id="editingPlanId" value="">
+                
+                <div class="form-group full-width">
+                    <label for="clientName">اسم المتدرب / العميل:</label>
+                    <input type="text" id="clientName" placeholder="أدخل اسم العميل" required>
+                </div>
+
+                <div class="section-title">1. اختبارات يوم السحب (Pull)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pullups">العقلة (أقصى عدد):</label>
+                        <input type="number" id="pullups" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hangTime">التعليق (بالثواني):</label>
+                        <input type="number" id="hangTime" min="0" value="0" required>
+                    </div>
+                </div>
+
+                <div class="section-title">2. اختبارات يوم الدفع (Push)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pushups">الضغط (أقصى عدد):</label>
+                        <input type="number" id="pushups" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dips">المتوازي (أقصى عدد أو نزول):</label>
+                        <input type="number" id="dips" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dipsType">نوع اختبار المتوازي:</label>
+                        <select id="dipsType">
+                            <option value="reps">عدّات متوازي كاملة</option>
+                            <option value="negative">نزول فقط (Negative)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section-title">3. اختبارات الأرجل والجذع (Legs & Core)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="squatJumps">قفز السكوات (أقصى عدد):</label>
+                        <input type="number" id="squatJumps" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plank">ثبات البلانك (بالثواني):</label>
+                        <input type="number" id="plank" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hollowBody">ثبات الهولو بودي (بالثواني):</label>
+                        <input type="number" id="hollowBody" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="superman">ثبات السوبرمان (بالثواني):</label>
+                        <input type="number" id="superman" min="0" value="0" required>
+                    </div>
+                </div>
+
+                <div class="section-title">4. تحديد مستوى المهارات (Skill Level)</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dipSkill">مهارة المتوازي:</label>
+                        <select id="dipSkill">
+                            <option value="1">الثبات على المتوازي عالياً</option>
+                            <option value="2">الثبات عالياً مع ثني الركبة</option>
+                            <option value="3">الـ L-Sit Tuck</option>
+                            <option value="4">كامل الـ L-Sit</option>
+                            <option value="5">L-Sit مع ثني الرجلين ثم L-Sit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pushSkill">مهارة الدفع / الهاندستاند:</label>
+                        <select id="pushSkill">
+                            <option value="1">هاندستاند Lean / تاك بايك</option>
+                            <option value="2">هاندستاند على الحائط (وجه للجدار)</option>
+                            <option value="3">هاندستاند على الحائط (ظهر للجدار)</option>
+                            <option value="4">محاولات توازن حر</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="generateAndSaveProgram()">⚡ إنشاء وحفظ الخطة التدريبية</button>
+            </form>
+        </section>
+
+        <!-- عرض النتائج -->
+        <section id="resultsSection" class="card results-section style-hidden">
+            <div class="results-header">
+                <h2>📋 الخطة التدريبية المخصصة لـ: <span id="displayClientName"></span></h2>
+                <div class="action-buttons">
+                    <button class="btn btn-whatsapp" onclick="copyWhatsAppFormat()">💬 نسخ للواتساب</button>
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+                </div>
+            </div>
+
+            <div id="programTables"></div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // تسجيل الـ Service Worker لتحويل الموقع لتطبيق PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
