@@ -1,4 +1,4 @@
-// التهيئة الخاصة بـ Firebase (استبدل الإعدادات ببيانات مشروعك إذا لزم الأمر)
+// التهيئة الخاص بـ Firebase
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -8,22 +8,17 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// تهيئة Firebase
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
 
-// تفعيل العمل أوفلاين مع معالجة التعدد
+// تفعيل العمل أوفلاين
 db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('تنبيه: التخزين المحلي يعمل في تبويب واحد فقط.');
-  } else if (err.code === 'unimplemented') {
-    console.warn('المتصفح لا يدعم التخزين المحلي.');
-  }
+  console.warn('Persistence notification:', err.code);
 });
 
-// الأحداث عند تغيير حالة الاتصال
+// مراقبة حالة الاتصال بالإنترنت
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
@@ -45,40 +40,38 @@ document.addEventListener('DOMContentLoaded', () => {
   listenToPlans();
 });
 
-// الدالة الأساسية لتوليد الخطة الشاملة لليوم الواحد
+// توليد الخطة وحفظها
 function generateAndSavePlan() {
-  const name = document.getElementById('clientName').value.trim();
-  const age = parseFloat(document.getElementById('clientAge').value) || 20;
-  const weight = parseFloat(document.getElementById('clientWeight').value) || 70;
-  const height = parseFloat(document.getElementById('clientHeight').value) || 170;
-
-  if (!name) {
+  const nameInput = document.getElementById('clientName');
+  if (!nameInput || !nameInput.value.trim()) {
     alert('يرجى أدخل اسم المتدرب أولاً!');
     return;
   }
 
-  // المهارات
-  const targetSkill = document.getElementById('targetSkill').value;
-  const skillHold = parseFloat(document.getElementById('skillHoldTime').value) || 0;
-  const skillReps = parseFloat(document.getElementById('skillReps').value) || 0;
+  const name = nameInput.value.trim();
+  const age = parseFloat(document.getElementById('clientAge')?.value) || 20;
+  const weight = parseFloat(document.getElementById('clientWeight')?.value) || 70;
+  const height = parseFloat(document.getElementById('clientHeight')?.value) || 170;
 
-  // نتائج القوة
-  const pullups = parseFloat(document.getElementById('pullups').value) || 0;
-  const dips = parseFloat(document.getElementById('dips').value) || 0;
-  const pushups = parseFloat(document.getElementById('pushups').value) || 0;
-  const squats = parseFloat(document.getElementById('squats').value) || 0;
-  const plank = parseFloat(document.getElementById('plank').value) || 0;
-  const hollow = parseFloat(document.getElementById('hollow').value) || 0;
-  const superman = parseFloat(document.getElementById('superman').value) || 0;
-  const hang = parseFloat(document.getElementById('hang').value) || 0;
+  const targetSkill = document.getElementById('targetSkill')?.value || 'handstand';
+  const skillHold = parseFloat(document.getElementById('skillHoldTime')?.value) || 0;
+  const skillReps = parseFloat(document.getElementById('skillReps')?.value) || 0;
 
-  // حساب معامل الشدة بناءً على كتلة الجسم والعمر
+  const pullups = parseFloat(document.getElementById('pullups')?.value) || 0;
+  const dips = parseFloat(document.getElementById('dips')?.value) || 0;
+  const pushups = parseFloat(document.getElementById('pushups')?.value) || 0;
+  const squats = parseFloat(document.getElementById('squats')?.value) || 0;
+  const plank = parseFloat(document.getElementById('plank')?.value) || 0;
+  const hollow = parseFloat(document.getElementById('hollow')?.value) || 0;
+  const superman = parseFloat(document.getElementById('superman')?.value) || 0;
+  const hang = parseFloat(document.getElementById('hang')?.value) || 0;
+
   const bmi = weight / ((height / 100) * (height / 100));
   let intensity = 1.0;
   if (bmi > 25) intensity -= 0.1;
   if (age > 35) intensity -= 0.1;
 
-  // --- 1. بناء قسم المهارة (Skill Section) ---
+  // قسم المهارة
   let skillExercises = [];
   if (targetSkill === 'handstand') {
     if (skillHold < 10) {
@@ -109,10 +102,8 @@ function generateAndSavePlan() {
     ];
   }
 
-  // --- 2. بناء قسم القوة (Strength Section) ---
+  // قسم القوة
   let strengthExercises = [];
-
-  // تمارين السحب والدفع
   if (pullups < 5) {
     strengthExercises.push(`1. ثابت سلبي: 3 × 2 (نزول بطيء 5 ثوانٍ)`);
     strengthExercises.push(`2. سحب أسترالي: 3 × 10-12 عدات`);
@@ -124,13 +115,12 @@ function generateAndSavePlan() {
 
   if (dips < 8) {
     strengthExercises.push(`4. المتوازي (Dips): 3 × 6-8 عدات`);
-    strengthExercises.push(`5. الضغط (Push-ups): 3 × 10-12 عدات (أو ضغط مائل/ركب)`);
+    strengthExercises.push(`5. الضغط (Push-ups): 3 × 10-12 عدات`);
   } else {
     strengthExercises.push(`3. المتوازي: 4 × ${Math.max(4, Math.round(dips * 0.75))} عدات`);
     strengthExercises.push(`4. ضغط بايك (Pike Pushups): 3 × 6-8 عدات`);
   }
 
-  // تمارين الأرجل والجذع (Core & Legs)
   strengthExercises.push(`6. سكوات قفز: 3 × ${squats > 0 ? Math.min(squats, 20) : '15'} عادة`);
   strengthExercises.push(`7. هولو بودي: 3 × ${hollow > 0 ? hollow : '20-25'} ثانية`);
   strengthExercises.push(`8. بلانك: 2 × ${plank > 0 ? Math.min(plank, 60) : '45-60'} ثانية`);
@@ -138,7 +128,6 @@ function generateAndSavePlan() {
     strengthExercises.push(`9. سوبرمان: 2 × ${superman} ثانية`);
   }
 
-  // كائن الخطة الكاملة
   const planData = {
     clientName: name,
     age: age,
@@ -151,20 +140,19 @@ function generateAndSavePlan() {
     strengthSection: strengthExercises
   };
 
-  // حفظ الخطة في Firestore
   db.collection('calisthenics_plans').add(planData)
     .then(() => {
       displayGeneratedPlan(planData);
     })
     .catch((error) => {
       console.error("خطأ في الحفظ السحابي: ", error);
-      displayGeneratedPlan(planData); // الاستمرار في العرض محلياً
+      displayGeneratedPlan(planData);
     });
 }
 
-// عرض الخطة على الشاشة
 function displayGeneratedPlan(plan) {
   const outputDiv = document.getElementById('planOutput');
+  if (!outputDiv) return;
   outputDiv.classList.remove('hidden');
 
   outputDiv.innerHTML = `
@@ -189,10 +177,11 @@ function displayGeneratedPlan(plan) {
   `;
 }
 
-// المزامنة والاستماع للخطط المحفوظة في القائمة
 function listenToPlans() {
   db.collection('calisthenics_plans').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
     const listDiv = document.getElementById('plansList');
+    if (!listDiv) return;
+
     if (snapshot.empty) {
       listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
       return;
@@ -206,7 +195,6 @@ function listenToPlans() {
           <h4>${data.clientName}</h4>
           <p>التاريخ: ${data.date || 'اليوم'}</p>
           <div class="item-actions">
-            <button onclick="viewPlan('${doc.id}')" class="btn-sm">عرض الخطة</button>
             <button onclick="deletePlan('${doc.id}')" class="btn-sm btn-danger">حذف</button>
           </div>
         </div>
@@ -216,7 +204,6 @@ function listenToPlans() {
   });
 }
 
-// حذف خطة
 function deletePlan(id) {
   if (confirm("هل أنت تأكد من حذف هذه الخطة؟")) {
     db.collection('calisthenics_plans').doc(id).delete();
