@@ -1,11 +1,12 @@
-// التهيئة الخاص بـ Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAPSpTam0RuNuW4AhednhKVLyt8J9vubk4",
+  authDomain: "adel-calisthenics.firebaseapp.com",
+  databaseURL: "https://adel-calisthenics-default-rtdb.firebaseio.com",
+  projectId: "adel-calisthenics",
+  storageBucket: "adel-calisthenics.firebasestorage.app",
+  messagingSenderId: "51697754269",
+  appId: "1:51697754269:web:1ef5a4a63a8d94e2d83474",
+  measurementId: "G-QM3VRNNQCG"
 };
 
 if (!firebase.apps.length) {
