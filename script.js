@@ -210,3 +210,22 @@ function deletePlan(id) {
     db.collection('calisthenics_plans').doc(id).delete();
   }
 }
+
+// التحكم في تشغيل وإيقاف الخلفية الموسيقية
+function toggleMusic() {
+  const music = document.getElementById('bgMusic');
+  const btnText = document.getElementById('musicText');
+  const btnIcon = document.getElementById('musicBtn');
+
+  if (music.paused) {
+    music.play();
+    btnText.innerText = "الموسيقى: تعمل";
+    btnText.style.color = "#38bdf8";
+    btnIcon.innerText = "🔊";
+  } else {
+    music.pause();
+    btnText.innerText = "الموسيقى: إيقاف";
+    btnText.style.color = "#94a3b8";
+    btnIcon.innerText = "🎵";
+  }
+}

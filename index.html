@@ -122,6 +122,17 @@
     </section>
   </div>
 
+  <!-- عنصر أداة التحكم بالموسيقى المباشرة -->
+<div class="music-control" onclick="toggleMusic()">
+  <button id="musicBtn">🎵</button>
+  <span id="musicText" style="font-size: 0.85rem; color: #94a3b8;">الموسيقى: إيقاف</span>
+</div>
+
+<!-- ملف الصوت المدمج للتحفيز -->
+<audio id="bgMusic" loop>
+  <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+</audio>
+
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
