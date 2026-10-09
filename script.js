@@ -24,8 +24,8 @@ window.addEventListener('offline', updateOnlineStatus);
 
 function updateOnlineStatus() {
     const statusEl = document.getElementById('connectionStatus');
-    if (!statusElement) return;
-    
+    if (!statusEl) return;
+
     if (navigator.onLine) {
         statusEl.className = 'status-online';
         statusEl.innerText = '🌐 متصل بالسحابة (مزامنة مباشرة)';
