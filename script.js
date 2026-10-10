@@ -14,9 +14,13 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// تفعيل العمل أوفلاين
+// تفعيل التخزين المؤقت بطريقة آمنة لا تسبب أخطاء
 db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-  console.warn('Persistence notification:', err.code);
+  if (err.code === 'failed-precondition') {
+    console.warn('ملاحظة: المتصفح يفتح أكثر من تبويب للتطبيق، يعمل النمط المحلي بشكل مستقل.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('المتصفح لا يدعم ميزة التخزين المؤقت الكاملة.');
+  }
 });
 
 // مراقبة حالة الاتصال بالإنترنت
@@ -228,4 +232,14 @@ function toggleMusic() {
     btnText.style.color = "#94a3b8";
     btnIcon.innerText = "🎵";
   }
+}
+
+if ('serviceWorker' in navigator) {
+  caches.keys().then((names) => {
+    for (let name of names) {
+      if (name !== 'calisthenics-v1.1') {
+        caches.delete(name);
+      }
+    }
+  });
 }
