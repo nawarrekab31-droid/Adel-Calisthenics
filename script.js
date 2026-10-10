@@ -16,11 +16,6 @@ const db = firebase.firestore();
 
 // تفعيل التخزين المؤقت بطريقة آمنة لا تسبب أخطاء
 db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('ملاحظة: المتصفح يفتح أكثر من تبويب للتطبيق، يعمل النمط المحلي بشكل مستقل.');
-  } else if (err.code === 'unimplemented') {
-    console.warn('المتصفح لا يدعم ميزة التخزين المؤقت الكاملة.');
-  }
 });
 
 // مراقبة حالة الاتصال بالإنترنت
@@ -184,8 +179,12 @@ function displayGeneratedPlan(plan) {
 
 function listenToPlans() {
   db.collection('calisthenics_plans').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+    // التأكد من وجود العنصر في الواجهة قبل محاولة الكتابة فيه
     const listDiv = document.getElementById('plansList');
-    if (!listDiv) return;
+    if (!listDiv) {
+      console.warn("لم يتم العثور على العنصر 'plansList' في صفحة HTML");
+      return;
+    }
 
     if (snapshot.empty) {
       listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
@@ -197,7 +196,7 @@ function listenToPlans() {
       const data = doc.data();
       html += `
         <div class="plan-item">
-          <h4>${data.clientName}</h4>
+          <h4>${data.clientName || 'متدرب'}</h4>
           <p>التاريخ: ${data.date || 'اليوم'}</p>
           <div class="item-actions">
             <button onclick="deletePlan('${doc.id}')" class="btn-sm btn-danger">حذف</button>
@@ -206,6 +205,8 @@ function listenToPlans() {
       `;
     });
     listDiv.innerHTML = html;
+  }, (error) => {
+    console.error("خطأ في الاستماع للبيانات:", error);
   });
 }
 
