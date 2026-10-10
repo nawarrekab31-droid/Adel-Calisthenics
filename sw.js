@@ -1,7 +1,7 @@
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open('calisthenics-app').then(cache => {
-      return cache.addAll(['./index.html', './styles.css', './script.js']);
+caches.open('calisthenics-app-v1.1').then(cache => {     
+   return cache.addAll(['./index.html', './styles.css', './script.js']);
     })
   );
 });
