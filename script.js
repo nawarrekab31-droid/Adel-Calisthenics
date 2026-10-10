@@ -1,12 +1,13 @@
+// ==========================================
+// 1. إعدادات وتأسيس Firebase
+// ==========================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAPSpTam0RuNuW4AhednhKVLyt8J9vubk4",
+  apiKey: "AIzaSy...", // استبدل بهذا المفتاح الخاص بك إن لزم
   authDomain: "adel-calisthenics.firebaseapp.com",
-  databaseURL: "https://adel-calisthenics-default-rtdb.firebaseio.com",
   projectId: "adel-calisthenics",
-  storageBucket: "adel-calisthenics.firebasestorage.app",
-  messagingSenderId: "51697754269",
-  appId: "1:51697754269:web:1ef5a4a63a8d94e2d83474",
-  measurementId: "G-QM3VRNNQCG"
+  storageBucket: "adel-calisthenics.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
 };
 
 if (!firebase.apps.length) {
@@ -14,11 +15,20 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// تفعيل التخزين المؤقت بطريقة آمنة لا تسبب أخطاء
+// تفعيل التخزين المريح وتجنب مشاكل فتح عدة تبويبات
+db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+
 db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+  if (err.code === 'failed-precondition') {
+    console.warn('تنبيه: التخزين المحلي يعمل، يرجى الاستخدام في تبويب واحد لتفادي التعارض.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('المتصفح لا يدعم التخزين المحلي الكامل.');
+  }
 });
 
-// مراقبة حالة الاتصال بالإنترنت
+// ==========================================
+// 2. إدارة حالة الاتصال والموسيقى
+// ==========================================
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
@@ -35,12 +45,31 @@ function updateOnlineStatus() {
   }
 }
 
+let isMusicPlaying = false;
+function toggleBackgroundMusic() {
+  const audio = document.getElementById('bgMusic');
+  const text = document.getElementById('musicText');
+
+  if (!audio) return;
+
+  if (isMusicPlaying) {
+    audio.pause();
+    if (text) text.innerText = 'تشغيل الموسيقى';
+  } else {
+    audio.play().catch(e => console.log('تعذر تشغيل الصوت تلقائياً:', e));
+    if (text) text.innerText = 'إيقاف الموسيقى';
+  }
+  isMusicPlaying = !isMusicPlaying;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   updateOnlineStatus();
   listenToPlans();
 });
 
-// توليد الخطة وحفظها
+// ==========================================
+// 3. توليد وحفظ الخطة التدريبية اليومية
+// ==========================================
 function generateAndSavePlan() {
   const nameInput = document.getElementById('clientName');
   if (!nameInput || !nameInput.value.trim()) {
@@ -53,10 +82,12 @@ function generateAndSavePlan() {
   const weight = parseFloat(document.getElementById('clientWeight')?.value) || 70;
   const height = parseFloat(document.getElementById('clientHeight')?.value) || 170;
 
+  // المهارات
   const targetSkill = document.getElementById('targetSkill')?.value || 'handstand';
   const skillHold = parseFloat(document.getElementById('skillHoldTime')?.value) || 0;
   const skillReps = parseFloat(document.getElementById('skillReps')?.value) || 0;
 
+  // اختبارات القوة
   const pullups = parseFloat(document.getElementById('pullups')?.value) || 0;
   const dips = parseFloat(document.getElementById('dips')?.value) || 0;
   const pushups = parseFloat(document.getElementById('pushups')?.value) || 0;
@@ -66,12 +97,13 @@ function generateAndSavePlan() {
   const superman = parseFloat(document.getElementById('superman')?.value) || 0;
   const hang = parseFloat(document.getElementById('hang')?.value) || 0;
 
+  // احتساب مؤشر كتلة الجسم والشدة
   const bmi = weight / ((height / 100) * (height / 100));
   let intensity = 1.0;
   if (bmi > 25) intensity -= 0.1;
   if (age > 35) intensity -= 0.1;
 
-  // قسم المهارة
+  // --- أ. بناء قسم المهارة (Skill Section) ---
   let skillExercises = [];
   if (targetSkill === 'handstand') {
     if (skillHold < 10) {
@@ -102,8 +134,10 @@ function generateAndSavePlan() {
     ];
   }
 
-  // قسم القوة
+  // --- ب. بناء قسم القوة والبناء (Strength Section) ---
   let strengthExercises = [];
+
+  // تمارين السحب والدفع
   if (pullups < 5) {
     strengthExercises.push(`1. ثابت سلبي: 3 × 2 (نزول بطيء 5 ثوانٍ)`);
     strengthExercises.push(`2. سحب أسترالي: 3 × 10-12 عدات`);
@@ -121,6 +155,7 @@ function generateAndSavePlan() {
     strengthExercises.push(`4. ضغط بايك (Pike Pushups): 3 × 6-8 عدات`);
   }
 
+  // تمارين الأرجل والجذع
   strengthExercises.push(`6. سكوات قفز: 3 × ${squats > 0 ? Math.min(squats, 20) : '15'} عادة`);
   strengthExercises.push(`7. هولو بودي: 3 × ${hollow > 0 ? hollow : '20-25'} ثانية`);
   strengthExercises.push(`8. بلانك: 2 × ${plank > 0 ? Math.min(plank, 60) : '45-60'} ثانية`);
@@ -140,19 +175,24 @@ function generateAndSavePlan() {
     strengthSection: strengthExercises
   };
 
+  // حفظ الخطة في السحابة
   db.collection('calisthenics_plans').add(planData)
     .then(() => {
       displayGeneratedPlan(planData);
     })
     .catch((error) => {
       console.error("خطأ في الحفظ السحابي: ", error);
-      displayGeneratedPlan(planData);
+      displayGeneratedPlan(planData); // الاستمرار محلياً
     });
 }
 
+// ==========================================
+// 4. عرض الخطة الناتجة على الواجهة
+// ==========================================
 function displayGeneratedPlan(plan) {
   const outputDiv = document.getElementById('planOutput');
   if (!outputDiv) return;
+  
   outputDiv.classList.remove('hidden');
 
   outputDiv.innerHTML = `
@@ -168,23 +208,25 @@ function displayGeneratedPlan(plan) {
       </ul>
     </div>
 
-    <div class="plan-section">
+    <div class="plan-section strength">
       <h3>💪 قسم القوة والبناء (Strength & Conditioning)</h3>
       <ul>
         ${plan.strengthSection.map(item => `<li>${item}</li>`).join('')}
       </ul>
     </div>
   `;
+
+  // التمرير السلس لناتج الخطة
+  outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
+// ==========================================
+// 5. الاستماع للخطط المحفوظة في السحابة
+// ==========================================
 function listenToPlans() {
   db.collection('calisthenics_plans').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
-    // التأكد من وجود العنصر في الواجهة قبل محاولة الكتابة فيه
     const listDiv = document.getElementById('plansList');
-    if (!listDiv) {
-      console.warn("لم يتم العثور على العنصر 'plansList' في صفحة HTML");
-      return;
-    }
+    if (!listDiv) return;
 
     if (snapshot.empty) {
       listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
@@ -206,41 +248,17 @@ function listenToPlans() {
     });
     listDiv.innerHTML = html;
   }, (error) => {
-    console.error("خطأ في الاستماع للبيانات:", error);
+    console.error("خطأ في جلب بيانات الأرشيف:", error);
   });
 }
 
+// ==========================================
+// 6. حذف خطة من الأرشيف
+// ==========================================
 function deletePlan(id) {
   if (confirm("هل أنت تأكد من حذف هذه الخطة؟")) {
-    db.collection('calisthenics_plans').doc(id).delete();
+    db.collection('calisthenics_plans').doc(id).delete().catch((err) => {
+      console.error("تعذر الحذف: ", err);
+    });
   }
-}
-
-// التحكم في تشغيل وإيقاف الخلفية الموسيقية
-function toggleMusic() {
-  const music = document.getElementById('bgMusic');
-  const btnText = document.getElementById('musicText');
-  const btnIcon = document.getElementById('musicBtn');
-
-  if (music.paused) {
-    music.play();
-    btnText.innerText = "الموسيقى: تعمل";
-    btnText.style.color = "#38bdf8";
-    btnIcon.innerText = "🔊";
-  } else {
-    music.pause();
-    btnText.innerText = "الموسيقى: إيقاف";
-    btnText.style.color = "#94a3b8";
-    btnIcon.innerText = "🎵";
-  }
-}
-
-if ('serviceWorker' in navigator) {
-  caches.keys().then((names) => {
-    for (let name of names) {
-      if (name !== 'calisthenics-v1.1') {
-        caches.delete(name);
-      }
-    }
-  });
 }
