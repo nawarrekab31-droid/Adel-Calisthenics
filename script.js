@@ -1,25 +1,19 @@
 // ==========================================
-// النظام الآمن الشامل (Local-First Architecture)
+// النظام المحلي المتكامل (Local-First Pure JS)
+// يعمل بدون الحاجة لأي اتصال خارجي أو سيرفرات
 // ==========================================
 
-// إدارة حالة الاتصال في الواجهة
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
 function updateOnlineStatus() {
   const statusEl = document.getElementById('connectionStatus');
   if (!statusEl) return;
-
-  if (navigator.onLine) {
-    statusEl.className = 'status-online';
-    statusEl.innerText = '🟢 متصل بالنظام المحلي السريع';
-  } else {
-    statusEl.className = 'status-offline';
-    statusEl.innerText = '🟠 وضع التشغيل المحلي (أوفلاين)';
-  }
+  statusEl.className = 'status-online';
+  statusEl.innerText = '⚡ نظام محلي عالي السرعة (أوفلاين بالكامل)';
 }
 
-// التحكم بالموسيقى
+// التحكم بالموسيقى والصوت
 let isMusicPlaying = false;
 function toggleBackgroundMusic() {
   const audio = document.getElementById('bgMusic');
@@ -30,7 +24,7 @@ function toggleBackgroundMusic() {
     audio.pause();
     if (text) text.innerText = 'تشغيل الموسيقى';
   } else {
-    audio.play().catch(e => console.log('التشغيل الصوتي يتطلب تفاعلاً:', e));
+    audio.play().catch(e => console.log('التشغيل الصوتي يتطلب تفاعل المستخدم:', e));
     if (text) text.innerText = 'إيقاف الموسيقى';
   }
   isMusicPlaying = !isMusicPlaying;
@@ -38,11 +32,11 @@ function toggleBackgroundMusic() {
 
 document.addEventListener('DOMContentLoaded', () => {
   updateOnlineStatus();
-  listenToPlans();
+  renderSavedPlansList();
 });
 
 // ==========================================
-// توليد وحفظ الخطة التدريبية اليومية محلياً
+// توليد وحفظ الخطة التدريبية محلياً
 // ==========================================
 function generateAndSavePlan() {
   const nameInput = document.getElementById('clientName');
@@ -71,13 +65,13 @@ function generateAndSavePlan() {
   const superman = parseFloat(document.getElementById('superman')?.value) || 0;
   const hang = parseFloat(document.getElementById('hang')?.value) || 0;
 
-  // احتساب مؤشر كتلة الجسم والشدة
+  // احتساب مؤشر كتلة الجسم (BMI) والشدة
   const bmi = weight / ((height / 100) * (height / 100));
   let intensity = 1.0;
   if (bmi > 25) intensity -= 0.1;
   if (age > 35) intensity -= 0.1;
 
-  // --- أ. بناء قسم المهارة (Skill Section) ---
+  // --- أ. قسم المهارة (Skill Section) ---
   let skillExercises = [];
   if (targetSkill === 'handstand') {
     if (skillHold < 10) {
@@ -108,7 +102,7 @@ function generateAndSavePlan() {
     ];
   }
 
-  // --- ب. بناء قسم القوة والبناء (Strength Section) ---
+  // --- ب. قسم القوة والبناء (Strength Section) ---
   let strengthExercises = [];
 
   if (pullups < 5) {
@@ -147,9 +141,10 @@ function generateAndSavePlan() {
     strengthSection: strengthExercises
   };
 
+  // حفظ في التخزين المحلي (LocalStorage)
   savePlanLocally(planData);
   displayGeneratedPlan(planData);
-  listenToPlans();
+  renderSavedPlansList();
 }
 
 function savePlanLocally(plan) {
@@ -159,7 +154,7 @@ function savePlanLocally(plan) {
 }
 
 // ==========================================
-// عرض الخطة الناتجة مع أزرار الطباعة والنسخ
+// عرض الخطة مع أزرار الطباعة والنسخ
 // ==========================================
 function displayGeneratedPlan(plan) {
   const outputDiv = document.getElementById('planOutput');
@@ -169,10 +164,10 @@ function displayGeneratedPlan(plan) {
 
   outputDiv.innerHTML = `
     <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end;">
-      <button onclick="printPlan()" class="btn-action" style="background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+      <button onclick="printPlan()" style="background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
         🖨️ طباعة الخطة
       </button>
-      <button onclick="copyPlan()" class="btn-action" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+      <button onclick="copyPlan()" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
         📋 نسخ الخطة
       </button>
     </div>
@@ -202,7 +197,7 @@ function displayGeneratedPlan(plan) {
   outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
-// دوال الطباعة والنسخ
+// دالة الطباعة
 function printPlan() {
   const printContents = document.getElementById('printablePlanContent').innerHTML;
   const originalContents = document.body.innerHTML;
@@ -217,23 +212,24 @@ function printPlan() {
   window.location.reload();
 }
 
+// دالة النسخ
 function copyPlan() {
   const content = document.getElementById('printablePlanContent');
   if (!content) return;
 
   const textToCopy = content.innerText;
   navigator.clipboard.writeText(textToCopy).then(() => {
-    alert('✅ تم نسخ تفاصيل الخطة بنجاح، يمكنك لصقها الآن في أي مكان (مثل واتساب)!');
+    alert('✅ تم نسخ تفاصيل الخطة بنجاح، يمكنك لصقها الآن في أي مكان (واتساب، تيليجرام...)!');
   }).catch(err => {
     console.error('فشل النسخ:', err);
-    alert('تعذر النسخ تلقائياً، يرجى تحديد النص يدوياً.');
+    alert('تعذر النسخ تلقائياً.');
   });
 }
 
 // ==========================================
-// إدارة الأرشيف المحلي
+// إدارة الأرشيف المحلي (عرض وحذف الخطط)
 // ==========================================
-function listenToPlans() {
+function renderSavedPlansList() {
   const listDiv = document.getElementById('plansList');
   if (!listDiv) return;
 
@@ -247,11 +243,13 @@ function listenToPlans() {
   let html = '';
   plans.forEach((data) => {
     html += `
-      <div class="plan-item">
-        <h4>${data.clientName || 'متدرب'}</h4>
-        <p>التاريخ: ${data.date || 'اليوم'}</p>
-        <div class="item-actions">
-          <button onclick="deletePlan('${data.id}')" class="btn-sm btn-danger">حذف</button>
+      <div class="plan-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h4 style="margin: 0 0 5px 0; color: #00d2ff;">${data.clientName}</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">التاريخ: ${data.date} | الوزن: ${data.weight} كغم</p>
+        </div>
+        <div>
+          <button onclick="deletePlan('${data.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">حذف</button>
         </div>
       </div>
     `;
@@ -260,10 +258,10 @@ function listenToPlans() {
 }
 
 function deletePlan(id) {
-  if (confirm("هل أنت متأكد من حذف هذه الخطة؟")) {
+  if (confirm("هل أنت متأكد من حذف هذه الخطة من الأرشيف؟")) {
     let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
     plans = plans.filter(p => p.id !== id);
     localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
-    listenToPlans();
+    renderSavedPlansList();
   }
 }
