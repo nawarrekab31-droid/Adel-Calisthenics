@@ -1,34 +1,8 @@
 // ==========================================
-// 1. إعدادات وتأسيس Firebase
+// النظام الآمن الشامل (Local-First Architecture)
 // ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSy...", // استبدل بهذا المفتاح الخاص بك إن لزم
-  authDomain: "adel-calisthenics.firebaseapp.com",
-  projectId: "adel-calisthenics",
-  storageBucket: "adel-calisthenics.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
-
-// تفعيل التخزين المريح وتجنب مشاكل فتح عدة تبويبات
-db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
-
-db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('تنبيه: التخزين المحلي يعمل، يرجى الاستخدام في تبويب واحد لتفادي التعارض.');
-  } else if (err.code === 'unimplemented') {
-    console.warn('المتصفح لا يدعم التخزين المحلي الكامل.');
-  }
-});
-
-// ==========================================
-// 2. إدارة حالة الاتصال والموسيقى
-// ==========================================
+// إدارة حالة الاتصال في الواجهة
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
@@ -38,25 +12,25 @@ function updateOnlineStatus() {
 
   if (navigator.onLine) {
     statusEl.className = 'status-online';
-    statusEl.innerText = '🟢 متصل بالسحابة (مزامنة مباشرة)';
+    statusEl.innerText = '🟢 متصل بالنظام المحلي السريع';
   } else {
     statusEl.className = 'status-offline';
-    statusEl.innerText = '🟠 غير متصل (يعمل محلياً وسيتم الرفع فور الاتصال)';
+    statusEl.innerText = '🟠 وضع التشغيل المحلي (أوفلاين)';
   }
 }
 
+// التحكم بالموسيقى
 let isMusicPlaying = false;
 function toggleBackgroundMusic() {
   const audio = document.getElementById('bgMusic');
   const text = document.getElementById('musicText');
-
   if (!audio) return;
 
   if (isMusicPlaying) {
     audio.pause();
     if (text) text.innerText = 'تشغيل الموسيقى';
   } else {
-    audio.play().catch(e => console.log('تعذر تشغيل الصوت تلقائياً:', e));
+    audio.play().catch(e => console.log('التشغيل الصوتي يتطلب تفاعلاً:', e));
     if (text) text.innerText = 'إيقاف الموسيقى';
   }
   isMusicPlaying = !isMusicPlaying;
@@ -68,12 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 3. توليد وحفظ الخطة التدريبية اليومية
+// توليد وحفظ الخطة التدريبية اليومية محلياً
 // ==========================================
 function generateAndSavePlan() {
   const nameInput = document.getElementById('clientName');
   if (!nameInput || !nameInput.value.trim()) {
-    alert('يرجى أدخل اسم المتدرب أولاً!');
+    alert('يرجى إدخال اسم المتدرب أولاً!');
     return;
   }
 
@@ -137,7 +111,6 @@ function generateAndSavePlan() {
   // --- ب. بناء قسم القوة والبناء (Strength Section) ---
   let strengthExercises = [];
 
-  // تمارين السحب والدفع
   if (pullups < 5) {
     strengthExercises.push(`1. ثابت سلبي: 3 × 2 (نزول بطيء 5 ثوانٍ)`);
     strengthExercises.push(`2. سحب أسترالي: 3 × 10-12 عدات`);
@@ -155,7 +128,6 @@ function generateAndSavePlan() {
     strengthExercises.push(`4. ضغط بايك (Pike Pushups): 3 × 6-8 عدات`);
   }
 
-  // تمارين الأرجل والجذع
   strengthExercises.push(`6. سكوات قفز: 3 × ${squats > 0 ? Math.min(squats, 20) : '15'} عادة`);
   strengthExercises.push(`7. هولو بودي: 3 × ${hollow > 0 ? hollow : '20-25'} ثانية`);
   strengthExercises.push(`8. بلانك: 2 × ${plank > 0 ? Math.min(plank, 60) : '45-60'} ثانية`);
@@ -164,30 +136,30 @@ function generateAndSavePlan() {
   }
 
   const planData = {
+    id: 'plan_' + Date.now(),
     clientName: name,
     age: age,
     weight: weight,
     height: height,
     bmi: bmi.toFixed(1),
     date: new Date().toLocaleDateString('ar-EG'),
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     skillSection: skillExercises,
     strengthSection: strengthExercises
   };
 
-  // حفظ الخطة في السحابة
-  db.collection('calisthenics_plans').add(planData)
-    .then(() => {
-      displayGeneratedPlan(planData);
-    })
-    .catch((error) => {
-      console.error("خطأ في الحفظ السحابي: ", error);
-      displayGeneratedPlan(planData); // الاستمرار محلياً
-    });
+  savePlanLocally(planData);
+  displayGeneratedPlan(planData);
+  listenToPlans();
+}
+
+function savePlanLocally(plan) {
+  let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+  plans.unshift(plan);
+  localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
 }
 
 // ==========================================
-// 4. عرض الخطة الناتجة على الواجهة
+// عرض الخطة الناتجة مع أزرار الطباعة والنسخ
 // ==========================================
 function displayGeneratedPlan(plan) {
   const outputDiv = document.getElementById('planOutput');
@@ -196,69 +168,102 @@ function displayGeneratedPlan(plan) {
   outputDiv.classList.remove('hidden');
 
   outputDiv.innerHTML = `
-    <h2>📋 الخطة التدريبية اليومية المتكاملة</h2>
-    <p><strong>المتدرب:</strong> ${plan.clientName} | <strong>العمر:</strong> ${plan.age} سنة | <strong>الوزن:</strong> ${plan.weight} كغم | <strong>الطول:</strong> ${plan.height} سم (BMI: ${plan.bmi})</p>
-    <p><strong>التاريخ:</strong> ${plan.date}</p>
-    <hr>
-    
-    <div class="plan-section">
-      <h3>🎯 قسم المهارة (Skill Section)</h3>
-      <ul>
-        ${plan.skillSection.map(item => `<li>${item}</li>`).join('')}
-      </ul>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end;">
+      <button onclick="printPlan()" class="btn-action" style="background: #3b82f6; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+        🖨️ طباعة الخطة
+      </button>
+      <button onclick="copyPlan()" class="btn-action" style="background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+        📋 نسخ الخطة
+      </button>
     </div>
 
-    <div class="plan-section strength">
-      <h3>💪 قسم القوة والبناء (Strength & Conditioning)</h3>
-      <ul>
-        ${plan.strengthSection.map(item => `<li>${item}</li>`).join('')}
-      </ul>
+    <div id="printablePlanContent">
+      <h2>📋 الخطة التدريبية اليومية المتكاملة</h2>
+      <p><strong>المتدرب:</strong> ${plan.clientName} | <strong>العمر:</strong> ${plan.age} سنة | <strong>الوزن:</strong> ${plan.weight} كغم | <strong>الطول:</strong> ${plan.height} سم (BMI: ${plan.bmi})</p>
+      <p><strong>التاريخ:</strong> ${plan.date}</p>
+      <hr style="border-color: rgba(255,255,255,0.1);">
+      
+      <div class="plan-section" style="margin-bottom: 15px;">
+        <h3 style="color: #00d2ff;">🎯 قسم المهارة (Skill Section)</h3>
+        <ul style="line-height: 1.8;">
+          ${plan.skillSection.map(item => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>
+
+      <div class="plan-section strength">
+        <h3 style="color: #ff5300;">💪 قسم القوة والبناء (Strength & Conditioning)</h3>
+        <ul style="line-height: 1.8;">
+          ${plan.strengthSection.map(item => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>
     </div>
   `;
 
-  // التمرير السلس لناتج الخطة
   outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ==========================================
-// 5. الاستماع للخطط المحفوظة في السحابة
-// ==========================================
-function listenToPlans() {
-  db.collection('calisthenics_plans').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
-    const listDiv = document.getElementById('plansList');
-    if (!listDiv) return;
+// دوال الطباعة والنسخ
+function printPlan() {
+  const printContents = document.getElementById('printablePlanContent').innerHTML;
+  const originalContents = document.body.innerHTML;
 
-    if (snapshot.empty) {
-      listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
-      return;
-    }
+  document.body.innerHTML = `
+    <div style="direction: rtl; font-family: 'Tajawal', sans-serif; padding: 20px; color: #000; background: #fff;">
+      ${printContents}
+    </div>
+  `;
+  window.print();
+  document.body.innerHTML = originalContents;
+  window.location.reload();
+}
 
-    let html = '';
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      html += `
-        <div class="plan-item">
-          <h4>${data.clientName || 'متدرب'}</h4>
-          <p>التاريخ: ${data.date || 'اليوم'}</p>
-          <div class="item-actions">
-            <button onclick="deletePlan('${doc.id}')" class="btn-sm btn-danger">حذف</button>
-          </div>
-        </div>
-      `;
-    });
-    listDiv.innerHTML = html;
-  }, (error) => {
-    console.error("خطأ في جلب بيانات الأرشيف:", error);
+function copyPlan() {
+  const content = document.getElementById('printablePlanContent');
+  if (!content) return;
+
+  const textToCopy = content.innerText;
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    alert('✅ تم نسخ تفاصيل الخطة بنجاح، يمكنك لصقها الآن في أي مكان (مثل واتساب)!');
+  }).catch(err => {
+    console.error('فشل النسخ:', err);
+    alert('تعذر النسخ تلقائياً، يرجى تحديد النص يدوياً.');
   });
 }
 
 // ==========================================
-// 6. حذف خطة من الأرشيف
+// إدارة الأرشيف المحلي
 // ==========================================
+function listenToPlans() {
+  const listDiv = document.getElementById('plansList');
+  if (!listDiv) return;
+
+  const plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+
+  if (plans.length === 0) {
+    listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
+    return;
+  }
+
+  let html = '';
+  plans.forEach((data) => {
+    html += `
+      <div class="plan-item">
+        <h4>${data.clientName || 'متدرب'}</h4>
+        <p>التاريخ: ${data.date || 'اليوم'}</p>
+        <div class="item-actions">
+          <button onclick="deletePlan('${data.id}')" class="btn-sm btn-danger">حذف</button>
+        </div>
+      </div>
+    `;
+  });
+  listDiv.innerHTML = html;
+}
+
 function deletePlan(id) {
-  if (confirm("هل أنت تأكد من حذف هذه الخطة؟")) {
-    db.collection('calisthenics_plans').doc(id).delete().catch((err) => {
-      console.error("تعذر الحذف: ", err);
-    });
+  if (confirm("هل أنت متأكد من حذف هذه الخطة؟")) {
+    let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+    plans = plans.filter(p => p.id !== id);
+    localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
+    listenToPlans();
   }
 }
