@@ -227,7 +227,7 @@ function copyPlan() {
 }
 
 // ==========================================
-// إدارة الأرشيف المحلي (عرض، تعديل، وحذف الخطط)
+// إدارة الأرشيف المحلي (عرض وتعديل البيانات)
 // ==========================================
 function renderSavedPlansList() {
   const listDiv = document.getElementById('plansList');
@@ -263,17 +263,24 @@ function viewOrEditPlan(id) {
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
 
-  // عرض الخطة في الواجهة الرئيسية
+  // 1. عرض الخطة في أسفل الشاشة
   displayGeneratedPlan(plan);
 
-  // نافذة سريعة لتعديل اسم المتدرب إن أردت
-  const newName = prompt("تعديل اسم المتدرب:", plan.clientName);
-  if (newName !== null && newName.trim() !== "") {
-    plan.clientName = newName.trim();
-    localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
-    displayGeneratedPlan(plan);
-    renderSavedPlansList();
-  }
+  // 2. تعبئة حقول المدخلات في أعلى الصفحة بالبيانات لتعديلها بحرية
+  const nameInput = document.getElementById('clientName');
+  const ageInput = document.getElementById('clientAge');
+  const weightInput = document.getElementById('clientWeight');
+  const heightInput = document.getElementById('clientHeight');
+
+  if (nameInput) nameInput.value = plan.clientName || '';
+  if (ageInput) ageInput.value = plan.age || '';
+  if (weightInput) weightInput.value = plan.weight || '';
+  if (heightInput) heightInput.value = plan.height || '';
+
+  alert(`تم جلب بيانات المتدرب "${plan.clientName}" إلى الحقول بالأسفل/الأعلى.\nيمكنك تعديل أي بيانات أو قيم ثم الضغط على زر توليد الخطة لتحديثها بالكامل!`);
+  
+  // الانتقال بسلاسة إلى حقول الإدخال في الأعلى
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function deletePlan(id) {
