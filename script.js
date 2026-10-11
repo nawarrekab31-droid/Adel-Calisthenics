@@ -227,7 +227,7 @@ function copyPlan() {
 }
 
 // ==========================================
-// إدارة الأرشيف المحلي (عرض وحذف الخطط)
+// إدارة الأرشيف المحلي (عرض، تعديل، وحذف الخطط)
 // ==========================================
 function renderSavedPlansList() {
   const listDiv = document.getElementById('plansList');
@@ -248,13 +248,32 @@ function renderSavedPlansList() {
           <h4 style="margin: 0 0 5px 0; color: #00d2ff;">${data.clientName}</h4>
           <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">التاريخ: ${data.date} | الوزن: ${data.weight} كغم</p>
         </div>
-        <div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="viewOrEditPlan('${data.id}')" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">عرض / تعديل</button>
           <button onclick="deletePlan('${data.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">حذف</button>
         </div>
       </div>
     `;
   });
   listDiv.innerHTML = html;
+}
+
+function viewOrEditPlan(id) {
+  const plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+  const plan = plans.find(p => p.id === id);
+  if (!plan) return;
+
+  // عرض الخطة في الواجهة الرئيسية
+  displayGeneratedPlan(plan);
+
+  // نافذة سريعة لتعديل اسم المتدرب إن أردت
+  const newName = prompt("تعديل اسم المتدرب:", plan.clientName);
+  if (newName !== null && newName.trim() !== "") {
+    plan.clientName = newName.trim();
+    localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
+    displayGeneratedPlan(plan);
+    renderSavedPlansList();
+  }
 }
 
 function deletePlan(id) {
