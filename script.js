@@ -1,7 +1,10 @@
 // ==========================================
 // النظام المحلي المتكامل (Local-First Pure JS)
-// يعمل بدون الحاجة لأي اتصال خارجي أو سيرفرات
+// مع ميزة التعديل والاستبدال المباشر للخطط
 // ==========================================
+
+// متغير عالمي لتتبع الخطة الجاري تعديلها حالياً
+let editingPlanId = null;
 
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
@@ -36,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// توليد وحفظ الخطة التدريبية محلياً
+// توليد / تحديث وحفظ الخطة التدريبية محلياً
 // ==========================================
 function generateAndSavePlan() {
   const nameInput = document.getElementById('clientName');
@@ -45,6 +48,7 @@ function generateAndSavePlan() {
     return;
   }
 
+  // قراءة كافة الحقول
   const name = nameInput.value.trim();
   const age = parseFloat(document.getElementById('clientAge')?.value) || 20;
   const weight = parseFloat(document.getElementById('clientWeight')?.value) || 70;
@@ -129,27 +133,53 @@ function generateAndSavePlan() {
     strengthExercises.push(`9. سوبرمان: 2 × ${superman} ثانية`);
   }
 
+  // تجهيز كائن الخطة الشامل
   const planData = {
-    id: 'plan_' + Date.now(),
+    id: editingPlanId ? editingPlanId : 'plan_' + Date.now(),
     clientName: name,
     age: age,
     weight: weight,
     height: height,
+    targetSkill: targetSkill,
+    skillHoldTime: skillHold,
+    skillReps: skillReps,
+    pullups: pullups,
+    dips: dips,
+    pushups: pushups,
+    squats: squats,
+    plank: plank,
+    hollow: hollow,
+    superman: superman,
+    hang: hang,
     bmi: bmi.toFixed(1),
     date: new Date().toLocaleDateString('ar-EG'),
     skillSection: skillExercises,
     strengthSection: strengthExercises
   };
 
-  // حفظ في التخزين المحلي (LocalStorage)
+  // حفظ الخطة (تحديث إذا كنا نعدل أو إضافة جديدة)
   savePlanLocally(planData);
   displayGeneratedPlan(planData);
   renderSavedPlansList();
+
+  // إرسال تنبيه وتظهير زر الحفظ للوضع الطبيعي
+  if (editingPlanId) {
+    alert(`✅ تم تحديث خطة المتدرب "${name}" واستبدالها في الأرشيف بنجاح!`);
+    editingPlanId = null; // إعادة تعيين المعرف للوضع الطبيعي
+  }
 }
 
 function savePlanLocally(plan) {
   let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
-  plans.unshift(plan);
+  
+  // البحث عن الخطة إن كانت موجودة مسبقاً لاستبدالها
+  const existingIndex = plans.findIndex(p => p.id === plan.id);
+  if (existingIndex !== -1) {
+    plans[existingIndex] = plan; // استبدال الخطة القديمة بالجديدة
+  } else {
+    plans.unshift(plan); // إضافة خطة جديدة
+  }
+
   localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
 }
 
@@ -227,7 +257,7 @@ function copyPlan() {
 }
 
 // ==========================================
-// إدارة الأرشيف المحلي (عرض وتعديل البيانات)
+// إدارة الأرشيف المحلي (تعبئة جميع الخانات والتعديل)
 // ==========================================
 function renderSavedPlansList() {
   const listDiv = document.getElementById('plansList');
@@ -263,24 +293,41 @@ function viewOrEditPlan(id) {
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
 
-  // 1. عرض الخطة في أسفل الشاشة
+  // 1. تحديد معرف الخطة التي جاري تعديلها
+  editingPlanId = plan.id;
+
+  // 2. ملء جميع الخانات والبيانات بالقيم المخزنة
+  setInputValue('clientName', plan.clientName);
+  setInputValue('clientAge', plan.age);
+  setInputValue('clientWeight', plan.weight);
+  setInputValue('clientHeight', plan.height);
+
+  setInputValue('targetSkill', plan.targetSkill || 'handstand');
+  setInputValue('skillHoldTime', plan.skillHoldTime || 0);
+  setInputValue('skillReps', plan.skillReps || 0);
+
+  setInputValue('pullups', plan.pullups || 0);
+  setInputValue('dips', plan.dips || 0);
+  setInputValue('pushups', plan.pushups || 0);
+  setInputValue('squats', plan.squats || 0);
+  setInputValue('plank', plan.plank || 0);
+  setInputValue('hollow', plan.hollow || 0);
+  setInputValue('superman', plan.superman || 0);
+  setInputValue('hang', plan.hang || 0);
+
+  // 3. عرض الخطة الحالية في الأسفل
   displayGeneratedPlan(plan);
 
-  // 2. تعبئة حقول المدخلات في أعلى الصفحة بالبيانات لتعديلها بحرية
-  const nameInput = document.getElementById('clientName');
-  const ageInput = document.getElementById('clientAge');
-  const weightInput = document.getElementById('clientWeight');
-  const heightInput = document.getElementById('clientHeight');
-
-  if (nameInput) nameInput.value = plan.clientName || '';
-  if (ageInput) ageInput.value = plan.age || '';
-  if (weightInput) weightInput.value = plan.weight || '';
-  if (heightInput) heightInput.value = plan.height || '';
-
-  alert(`تم جلب بيانات المتدرب "${plan.clientName}" إلى الحقول بالأسفل/الأعلى.\nيمكنك تعديل أي بيانات أو قيم ثم الضغط على زر توليد الخطة لتحديثها بالكامل!`);
-  
-  // الانتقال بسلاسة إلى حقول الإدخال في الأعلى
+  // 4. التمرير إلى الأعلى لإجراء التعديلات
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// دالة مساعدة لتعبئة قيم الخانات بأمان
+function setInputValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.value = (val !== undefined && val !== null) ? val : '';
+  }
 }
 
 function deletePlan(id) {
@@ -288,6 +335,11 @@ function deletePlan(id) {
     let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
     plans = plans.filter(p => p.id !== id);
     localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
+
+    if (editingPlanId === id) {
+      editingPlanId = null;
+    }
+
     renderSavedPlansList();
   }
 }
