@@ -3,150 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>منصة التدريب - برنامج الكاليسثنيكس الاحترافي</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="data:,">
+  <title>نظام خطط الكاليستوينكس الاحترافي</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- خط تاجاول العصري -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <div class="container">
-    <header>
-      <h1>🏋️ برنامج الكاليسثنيكس الاحترافي</h1>
-      <p>مولد وحافظ الخطط التدريبية اليومية للمدربين</p>
-      <div id="connectionStatus" class="status-online">جاري الاتصال بالسحابة...</div>
+    <!-- رأس الصفحة -->
+    <header class="app-header">
+      <h1>⚡ نظام خطط الكاليستوينكس الاحترافي</h1>
+      <p id="connectionStatus" class="status-online">🟢 متصل بالنظام المحلي السريع</p>
     </header>
 
-    <!-- قسم الخطط المحفوظة -->
-    <section class="card">
-      <h2>📁 أرشيف خطط المتدربين المحفوظة</h2>
-      <div id="plansList" class="plans-grid">
+    <!-- مشغل الموسيقى الاختياري -->
+    <div class="music-control-panel" style="margin-bottom: 20px; text-align: center;">
+      <audio id="bgMusic" loop src="https://www.bensound.com/bensound-music/bensound-dubstep.mp3"></audio>
+      <button onclick="toggleBackgroundMusic()" id="musicBtn" style="background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit;">
+        🎵 <span id="musicText">تشغيل الموسيقى</span>
+      </button>
+    </div>
+
+    <!-- نموذج إدخال بيانات المتدرب والمهارات -->
+    <div class="form-card">
+      <h2>👤 البيانات الشخصية والبدنية</h2>
+      
+      <div class="input-group">
+        <label for="clientName">اسم المتدرب / العميل:</label>
+        <input type="text" id="clientName" placeholder="أدخل اسم العميل">
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="clientAge">العمر (سنة):</label>
+          <input type="number" id="clientAge" value="20">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="clientWeight">الوزن (كغم):</label>
+          <input type="number" id="clientWeight" value="70">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="clientHeight">الطول (سم):</label>
+          <input type="number" id="clientHeight" value="170">
+        </div>
+      </div>
+
+      <h2 style="margin-top: 25px;">🎯 اختيار المهارة المستهدفة</h2>
+      
+      <div class="input-group">
+        <label for="targetSkill">المهارة الأساسية:</label>
+        <select id="targetSkill">
+          <option value="handstand">هاندستاند (Handstand)</option>
+          <option value="parallel_hold">ثبات المتوازي (L-Sit)</option>
+          <option value="other">مهارة أخرى</option>
+        </select>
+      </div>
+
+      <!-- خانة كتابة مهارة مخصصة جديدة -->
+      <div class="input-group" id="customSkillContainer" style="margin-top: 15px;">
+        <label for="customSkillName" style="color: #00d2ff; font-weight: bold; display: block; margin-bottom: 5px;">أو اكتب اسم مهارة مخصصة جديدة:</label>
+        <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever..." style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; font-family: inherit; box-sizing: border-box;">
+      </div>
+
+      <div class="input-row" style="display: flex; gap: 10px; margin-top: 15px;">
+        <div class="input-group" style="flex: 1;">
+          <label for="skillHoldTime">زمن الثبات الحالي للمهارة (ثواني):</label>
+          <input type="number" id="skillHoldTime" value="0">
+        </div>
+        <div class="input-group" style="flex: 1;">
+          <label for="skillReps">أقصى عدات/محاولات للمهارة:</label>
+          <input type="number" id="skillReps" value="0">
+        </div>
+      </div>
+
+      <h2 style="margin-top: 25px;">💪 اختبارات القوة البدنية (Strength Tests)</h2>
+      
+      <div class="input-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="pullups">العقلة / الثابت (أقصى عدد):</label>
+          <input type="number" id="pullups" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="dips">المتوازي (أقصى عدد):</label>
+          <input type="number" id="dips" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="pushups">الضغط (أقصى عدد):</label>
+          <input type="number" id="pushups" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="squats">السكوات (أقصى عدد):</label>
+          <input type="number" id="squats" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="plank">البلانك (ثواني):</label>
+          <input type="number" id="plank" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="hollow">هولو بودي (ثواني):</label>
+          <input type="number" id="hollow" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="superman">سوبرمان (ثواني):</label>
+          <input type="number" id="superman" value="0">
+        </div>
+        <div class="input-group" style="flex: 1; min-width: 45%;">
+          <label for="hang">التعلق المباشر (ثواني):</label>
+          <input type="number" id="hang" value="0">
+        </div>
+      </div>
+
+      <!-- زر إنشاء وتوليد الخطة -->
+      <button onclick="generateAndSavePlan()" class="btn-primary" style="width: 100%; margin-top: 25px; padding: 14px; background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; font-family: inherit;">
+        🚀 إنشاء / تحديث الخطة التدريبية
+      </button>
+    </div>
+
+    <!-- مكان عرض الخطة الناتجة (يحتوي أزرار الطباعة والنسخ) -->
+    <div id="planOutput" class="hidden" style="margin-top: 30px; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+      <!-- يتم تعبئته برمجياً عبر ملف script.js -->
+    </div>
+
+    <!-- أرشيف الخطط المحفوظة محلياً -->
+    <div class="archive-section" style="margin-top: 40px;">
+      <h2>📂 أرشيف الخطط المحفوظة محلياً</h2>
+      <div id="plansList">
         <p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>
       </div>
-    </section>
+    </div>
 
-    <!-- نموذج إدخال البيانات -->
-    <section class="card">
-      <h2>📝 إدخال بيانات واختبارات المتدرب</h2>
-      
-      <!-- 1. البيانات الشخصية -->
-      <div class="section-group">
-        <h3>👤 البيانات الشخصية والقياسات</h3>
-        <div class="form-grid">
-          <div>
-            <label for="clientName">اسم المتدرب / العميل:</label>
-            <input type="text" id="clientName" placeholder="أدخل اسم العميل" required>
-          </div>
-          <div>
-            <label for="clientAge">العمر (سنة):</label>
-            <input type="number" id="clientAge" value="20" min="10" max="80">
-          </div>
-          <div>
-            <label for="clientWeight">الوزن (كغم):</label>
-            <input type="number" id="clientWeight" value="70" step="0.1">
-          </div>
-          <div>
-            <label for="clientHeight">الطول (سم):</label>
-            <input type="number" id="clientHeight" value="170">
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. المهارات المستهدفة والاختبار -->
-      <div class="section-group">
-        <h3>🎯 تحديد واختبار المهارة (Skill Level)</h3>
-        <div class="form-grid">
-          <div>
-            <label for="targetSkill">المهارة المستهدفة:</label>
-            <select id="targetSkill">
-              <!-- أضف هذا الكود في ملف index.html تحت قائمة اختيار المهارات مباشرة -->
-<div class="input-group" style="margin-top: 15px;">
-  <label for="customSkillName" style="color: #00d2ff; font-weight: bold; display: block; margin-bottom: 5px;">أو اكتب اسم مهارة مخصصة جديدة:</label>
-  <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever..." style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; font-family: inherit;">
-</div>
-              
-              <option value="handstand">هاندستاند (Handstand)</option>
-              <option value="parallel_hold">ثبات المتوازي / L-Sit</option>
-              <option value="pullup_hold">تثبيت العقلة والدفعة</option>
-            </select>
-          </div>
-          <div>
-            <label for="skillHoldTime">وقت ثبات المهارة (بالثواني):</label>
-            <input type="number" id="skillHoldTime" value="0" placeholder="مثال: 10">
-          </div>
-          <div>
-            <label for="skillReps">أقصى عدات/محاولات للمهارة:</label>
-            <input type="number" id="skillReps" value="0" placeholder="مثال: 5">
-          </div>
-        </div>
-      </div>
-
-      <!-- خانة كتابة مهارة مخصصة في حال اختيار مهارة أخرى أو رغبة المستخدم -->
-<div class="input-group" style="margin-top: 10px;">
-  <label for="customSkillName">أو اكتب اسم مهارة مخصصة جديدة:</label>
-  <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever..." style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white;">
-</div>
-      
-      <!-- 3. اختبارات القوة البدنية -->
-      <div class="section-group">
-        <h3>💪 اختبارات القوة البدنية (Strength Tests)</h3>
-        <div class="form-grid">
-          <div>
-            <label for="pullups">العقلة / الثابت (أقصى عدد):</label>
-            <input type="number" id="pullups" value="0">
-          </div>
-          <div>
-            <label for="dips">المتوازي (أقصى عدد):</label>
-            <input type="number" id="dips" value="0">
-          </div>
-          <div>
-            <label for="pushups">الضغط (أقصى عدد):</label>
-            <input type="number" id="pushups" value="0">
-          </div>
-          <div>
-            <label for="squats">قفز السكوات (أقصى عدد):</label>
-            <input type="number" id="squats" value="0">
-          </div>
-          <div>
-            <label for="plank">ثبات البلانك (بالثواني):</label>
-            <input type="number" id="plank" value="0">
-          </div>
-          <div>
-            <label for="hollow">ثبات الهولو بودي (بالثواني):</label>
-            <input type="number" id="hollow" value="0">
-          </div>
-          <div>
-            <label for="superman">ثبات السوبرمان (بالثواني):</label>
-            <input type="number" id="superman" value="0">
-          </div>
-          <div>
-            <label for="hang">ثبات التعلق (بالثواني):</label>
-            <input type="number" id="hang" value="0">
-          </div>
-        </div>
-      </div>
-
-      <button id="generateBtn" onclick="generateAndSavePlan()" class="btn-primary">⚡ إنشاء وحفظ الخطة التدريبية اليومية</button>
-    </section>
-
-    <!-- عرض الخطة الناتجة -->
-    <section id="planOutput" class="card hidden">
-      <!-- يتم توليد الخطة هنا ديناميكياً -->
-    </section>
   </div>
 
-  <!-- عنصر أداة التحكم بالموسيقى المباشرة -->
-<div class="music-control" onclick="toggleMusic()">
-  <button id="musicBtn">🎵</button>
-  <span id="musicText" style="font-size: 0.85rem; color: #94a3b8;">الموسيقى: إيقاف</span>
-</div>
-
-
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <!-- ربط ملف الجافاسكريبت -->
   <script src="script.js"></script>
 </body>
 </html>
