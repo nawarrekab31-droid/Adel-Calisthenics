@@ -1,9 +1,8 @@
 // ==========================================
 // النظام المحلي المتكامل (Local-First Pure JS)
-// مع ميزة التعديل والاستبدال المباشر للخطط
+// مع دعم المهارات المخصصة والتعديل المباشر
 // ==========================================
 
-// متغير عالمي لتتبع الخطة الجاري تعديلها حالياً
 let editingPlanId = null;
 
 window.addEventListener('online', updateOnlineStatus);
@@ -48,14 +47,18 @@ function generateAndSavePlan() {
     return;
   }
 
-  // قراءة كافة الحقول
+  // البيانات الشخصية
   const name = nameInput.value.trim();
   const age = parseFloat(document.getElementById('clientAge')?.value) || 20;
   const weight = parseFloat(document.getElementById('clientWeight')?.value) || 70;
   const height = parseFloat(document.getElementById('clientHeight')?.value) || 170;
 
-  // المهارات
-  const targetSkill = document.getElementById('targetSkill')?.value || 'handstand';
+  // المهارات (دعم المهارة المخصصة)
+  const targetSkillSelect = document.getElementById('targetSkill')?.value || 'handstand';
+  const customSkillInput = document.getElementById('customSkillName')?.value?.trim();
+  // إذا كتب المستخدم مهارة مخصصة، نعتمدها، وإلا فنأخذ المختارة من القائمة
+  const finalSkillName = customSkillInput ? customSkillInput : targetSkillSelect;
+
   const skillHold = parseFloat(document.getElementById('skillHoldTime')?.value) || 0;
   const skillReps = parseFloat(document.getElementById('skillReps')?.value) || 0;
 
@@ -77,7 +80,14 @@ function generateAndSavePlan() {
 
   // --- أ. قسم المهارة (Skill Section) ---
   let skillExercises = [];
-  if (targetSkill === 'handstand') {
+  if (customSkillInput) {
+    // توليد تمرين ذكي للمهارة المخصصة الجديدة التي أضافها المستخدم
+    skillExercises = [
+      `1. تمرين تهيئة وثبات لمهارة (${finalSkillName}): 3 × ${skillHold > 0 ? skillHold : '10-15'} ثانية`,
+      `2. محاولات تركيز جزئية وتكنيك لـ ${finalSkillName}: 4 × ${skillReps > 0 ? skillReps : '5'} محاولات`,
+      `3. تقوية العضلات المساندة للأساس الحركي: 3 × 8-10 عدات`
+    ];
+  } else if (targetSkillSelect === 'handstand') {
     if (skillHold < 10) {
       skillExercises = [
         `1. هاندستاند على الحائط (البطن للجدار): 2 × ${Math.max(10, Math.round(20 * intensity))} ثانية`,
@@ -92,7 +102,7 @@ function generateAndSavePlan() {
         `3. الثبات والاتزان العالي: 3 × ${skillHold} ثانية`
       ];
     }
-  } else if (targetSkill === 'parallel_hold') {
+  } else if (targetSkillSelect === 'parallel_hold') {
     skillExercises = [
       `1. تثبيت التطور على الثابت: 4 × ${skillHold > 0 ? skillHold : '8-12'} ثانية`,
       `2. رفع الركبتين باتجاه الصدر مع تحكم: 3 × 6-8 عدات`,
@@ -133,14 +143,15 @@ function generateAndSavePlan() {
     strengthExercises.push(`9. سوبرمان: 2 × ${superman} ثانية`);
   }
 
-  // تجهيز كائن الخطة الشامل
+  // تجهيز كائن الخطة
   const planData = {
     id: editingPlanId ? editingPlanId : 'plan_' + Date.now(),
     clientName: name,
     age: age,
     weight: weight,
     height: height,
-    targetSkill: targetSkill,
+    targetSkill: targetSkillSelect,
+    customSkill: customSkillInput || '', // حفظ المهارة المخصصة إن وجدت
     skillHoldTime: skillHold,
     skillReps: skillReps,
     pullups: pullups,
@@ -157,29 +168,24 @@ function generateAndSavePlan() {
     strengthSection: strengthExercises
   };
 
-  // حفظ الخطة (تحديث إذا كنا نعدل أو إضافة جديدة)
   savePlanLocally(planData);
   displayGeneratedPlan(planData);
   renderSavedPlansList();
 
-  // إرسال تنبيه وتظهير زر الحفظ للوضع الطبيعي
   if (editingPlanId) {
-    alert(`✅ تم تحديث خطة المتدرب "${name}" واستبدالها في الأرشيف بنجاح!`);
-    editingPlanId = null; // إعادة تعيين المعرف للوضع الطبيعي
+    alert(`✅ تم تحديث خطة المتدرب "${name}" واستبدالها بنجاح!`);
+    editingPlanId = null;
   }
 }
 
 function savePlanLocally(plan) {
   let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
-  
-  // البحث عن الخطة إن كانت موجودة مسبقاً لاستبدالها
   const existingIndex = plans.findIndex(p => p.id === plan.id);
   if (existingIndex !== -1) {
-    plans[existingIndex] = plan; // استبدال الخطة القديمة بالجديدة
+    plans[existingIndex] = plan;
   } else {
-    plans.unshift(plan); // إضافة خطة جديدة
+    plans.unshift(plan);
   }
-
   localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
 }
 
@@ -191,6 +197,8 @@ function displayGeneratedPlan(plan) {
   if (!outputDiv) return;
   
   outputDiv.classList.remove('hidden');
+
+  const displaySkillTitle = plan.customSkill ? `مهارة مخصصة: ${plan.customSkill}` : `قسم المهارة (Skill Section)`;
 
   outputDiv.innerHTML = `
     <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end;">
@@ -209,7 +217,7 @@ function displayGeneratedPlan(plan) {
       <hr style="border-color: rgba(255,255,255,0.1);">
       
       <div class="plan-section" style="margin-bottom: 15px;">
-        <h3 style="color: #00d2ff;">🎯 قسم المهارة (Skill Section)</h3>
+        <h3 style="color: #00d2ff;">🎯 ${displaySkillTitle}</h3>
         <ul style="line-height: 1.8;">
           ${plan.skillSection.map(item => `<li>${item}</li>`).join('')}
         </ul>
@@ -227,7 +235,6 @@ function displayGeneratedPlan(plan) {
   outputDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
-// دالة الطباعة
 function printPlan() {
   const printContents = document.getElementById('printablePlanContent').innerHTML;
   const originalContents = document.body.innerHTML;
@@ -242,22 +249,20 @@ function printPlan() {
   window.location.reload();
 }
 
-// دالة النسخ
 function copyPlan() {
   const content = document.getElementById('printablePlanContent');
   if (!content) return;
 
   const textToCopy = content.innerText;
   navigator.clipboard.writeText(textToCopy).then(() => {
-    alert('✅ تم نسخ تفاصيل الخطة بنجاح، يمكنك لصقها الآن في أي مكان (واتساب، تيليجرام...)!');
+    alert('✅ تم نسخ تفاصيل الخطة بنجاح!');
   }).catch(err => {
     console.error('فشل النسخ:', err);
-    alert('تعذر النسخ تلقائياً.');
   });
 }
 
 // ==========================================
-// إدارة الأرشيف المحلي (تعبئة جميع الخانات والتعديل)
+// إدارة الأرشيف المحلي (استرجاع المهارة المخصصة عند التعديل)
 // ==========================================
 function renderSavedPlansList() {
   const listDiv = document.getElementById('plansList');
@@ -272,10 +277,11 @@ function renderSavedPlansList() {
 
   let html = '';
   plans.forEach((data) => {
+    const skillLabel = data.customSkill ? data.customSkill : data.targetSkill;
     html += `
       <div class="plan-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <h4 style="margin: 0 0 5px 0; color: #00d2ff;">${data.clientName}</h4>
+          <h4 style="margin: 0 0 5px 0; color: #00d2ff;">${data.clientName} <span style="font-size: 0.8rem; color: #f59e0b;">(${skillLabel})</span></h4>
           <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">التاريخ: ${data.date} | الوزن: ${data.weight} كغم</p>
         </div>
         <div style="display: flex; gap: 8px;">
@@ -293,19 +299,22 @@ function viewOrEditPlan(id) {
   const plan = plans.find(p => p.id === id);
   if (!plan) return;
 
-  // 1. تحديد معرف الخطة التي جاري تعديلها
   editingPlanId = plan.id;
 
-  // 2. ملء جميع الخانات والبيانات بالقيم المخزنة
+  // ملء بيانات الخانات الشخصية
   setInputValue('clientName', plan.clientName);
   setInputValue('clientAge', plan.age);
   setInputValue('clientWeight', plan.weight);
   setInputValue('clientHeight', plan.height);
 
+  // ملء المهارات المخصصة والقائمة
   setInputValue('targetSkill', plan.targetSkill || 'handstand');
+  setInputValue('customSkillName', plan.customSkill || '');
+
   setInputValue('skillHoldTime', plan.skillHoldTime || 0);
   setInputValue('skillReps', plan.skillReps || 0);
 
+  // ملء اختبارات القوة
   setInputValue('pullups', plan.pullups || 0);
   setInputValue('dips', plan.dips || 0);
   setInputValue('pushups', plan.pushups || 0);
@@ -315,14 +324,10 @@ function viewOrEditPlan(id) {
   setInputValue('superman', plan.superman || 0);
   setInputValue('hang', plan.hang || 0);
 
-  // 3. عرض الخطة الحالية في الأسفل
   displayGeneratedPlan(plan);
-
-  // 4. التمرير إلى الأعلى لإجراء التعديلات
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// دالة مساعدة لتعبئة قيم الخانات بأمان
 function setInputValue(id, val) {
   const el = document.getElementById(id);
   if (el) {
@@ -342,4 +347,5 @@ function deletePlan(id) {
 
     renderSavedPlansList();
   }
-}
+    }
+      
