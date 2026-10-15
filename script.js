@@ -1,6 +1,6 @@
 // ==========================================
 // النظام المحلي المتكامل (Local-First Pure JS)
-// مع دعم المهارات المخصصة والتعديل المباشر
+// مع إنشاء خانة المهارة المخصصة تلقائياً
 // ==========================================
 
 let editingPlanId = null;
@@ -13,6 +13,32 @@ function updateOnlineStatus() {
   if (!statusEl) return;
   statusEl.className = 'status-online';
   statusEl.innerText = '⚡ نظام محلي عالي السرعة (أوفلاين بالكامل)';
+}
+
+// حقن خانة المهارة المخصصة تلقائياً في الصفحة لتجنب مشاكل HTML Cache
+document.addEventListener('DOMContentLoaded', () => {
+  updateOnlineStatus();
+  injectCustomSkillInput();
+  renderSavedPlansList();
+});
+
+function injectCustomSkillInput() {
+  const targetSkillSelect = document.getElementById('targetSkill');
+  if (!targetSkillSelect) return;
+  
+  // التأكد من عدم تكرار الإنشاء
+  if (document.getElementById('customSkillContainer')) return;
+
+  const container = document.createElement('div');
+  container.id = 'customSkillContainer';
+  container.style.cssText = 'margin-top: 15px; margin-bottom: 15px;';
+  container.innerHTML = `
+    <label for="customSkillName" style="color: #00d2ff; font-weight: bold; display: block; margin-bottom: 5px;">أو اكتب اسم مهارة مخصصة جديدة:</label>
+    <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever..." style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; font-family: inherit; box-sizing: border-box;">
+  `;
+
+  // إدراج الحقل تحت قائمة المهارات مباشرة
+  targetSkillSelect.parentNode.insertBefore(container, targetSkillSelect.nextSibling);
 }
 
 // التحكم بالموسيقى والصوت
@@ -32,11 +58,6 @@ function toggleBackgroundMusic() {
   isMusicPlaying = !isMusicPlaying;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  updateOnlineStatus();
-  renderSavedPlansList();
-});
-
 // ==========================================
 // توليد / تحديث وحفظ الخطة التدريبية محلياً
 // ==========================================
@@ -47,22 +68,18 @@ function generateAndSavePlan() {
     return;
   }
 
-  // البيانات الشخصية
   const name = nameInput.value.trim();
   const age = parseFloat(document.getElementById('clientAge')?.value) || 20;
   const weight = parseFloat(document.getElementById('clientWeight')?.value) || 70;
   const height = parseFloat(document.getElementById('clientHeight')?.value) || 170;
 
-  // المهارات (دعم المهارة المخصصة)
   const targetSkillSelect = document.getElementById('targetSkill')?.value || 'handstand';
   const customSkillInput = document.getElementById('customSkillName')?.value?.trim();
-  // إذا كتب المستخدم مهارة مخصصة، نعتمدها، وإلا فنأخذ المختارة من القائمة
   const finalSkillName = customSkillInput ? customSkillInput : targetSkillSelect;
 
   const skillHold = parseFloat(document.getElementById('skillHoldTime')?.value) || 0;
   const skillReps = parseFloat(document.getElementById('skillReps')?.value) || 0;
 
-  // اختبارات القوة
   const pullups = parseFloat(document.getElementById('pullups')?.value) || 0;
   const dips = parseFloat(document.getElementById('dips')?.value) || 0;
   const pushups = parseFloat(document.getElementById('pushups')?.value) || 0;
@@ -72,16 +89,13 @@ function generateAndSavePlan() {
   const superman = parseFloat(document.getElementById('superman')?.value) || 0;
   const hang = parseFloat(document.getElementById('hang')?.value) || 0;
 
-  // احتساب مؤشر كتلة الجسم (BMI) والشدة
   const bmi = weight / ((height / 100) * (height / 100));
   let intensity = 1.0;
   if (bmi > 25) intensity -= 0.1;
   if (age > 35) intensity -= 0.1;
 
-  // --- أ. قسم المهارة (Skill Section) ---
   let skillExercises = [];
   if (customSkillInput) {
-    // توليد تمرين ذكي للمهارة المخصصة الجديدة التي أضافها المستخدم
     skillExercises = [
       `1. تمرين تهيئة وثبات لمهارة (${finalSkillName}): 3 × ${skillHold > 0 ? skillHold : '10-15'} ثانية`,
       `2. محاولات تركيز جزئية وتكنيك لـ ${finalSkillName}: 4 × ${skillReps > 0 ? skillReps : '5'} محاولات`,
@@ -116,9 +130,7 @@ function generateAndSavePlan() {
     ];
   }
 
-  // --- ب. قسم القوة والبناء (Strength Section) ---
   let strengthExercises = [];
-
   if (pullups < 5) {
     strengthExercises.push(`1. ثابت سلبي: 3 × 2 (نزول بطيء 5 ثوانٍ)`);
     strengthExercises.push(`2. سحب أسترالي: 3 × 10-12 عدات`);
@@ -143,7 +155,6 @@ function generateAndSavePlan() {
     strengthExercises.push(`9. سوبرمان: 2 × ${superman} ثانية`);
   }
 
-  // تجهيز كائن الخطة
   const planData = {
     id: editingPlanId ? editingPlanId : 'plan_' + Date.now(),
     clientName: name,
@@ -151,7 +162,7 @@ function generateAndSavePlan() {
     weight: weight,
     height: height,
     targetSkill: targetSkillSelect,
-    customSkill: customSkillInput || '', // حفظ المهارة المخصصة إن وجدت
+    customSkill: customSkillInput || '',
     skillHoldTime: skillHold,
     skillReps: skillReps,
     pullups: pullups,
@@ -197,7 +208,6 @@ function displayGeneratedPlan(plan) {
   if (!outputDiv) return;
   
   outputDiv.classList.remove('hidden');
-
   const displaySkillTitle = plan.customSkill ? `مهارة مخصصة: ${plan.customSkill}` : `قسم المهارة (Skill Section)`;
 
   outputDiv.innerHTML = `
@@ -256,6 +266,96 @@ function copyPlan() {
   const textToCopy = content.innerText;
   navigator.clipboard.writeText(textToCopy).then(() => {
     alert('✅ تم نسخ تفاصيل الخطة بنجاح!');
+  }).catch(err => {
+    console.error('فشل النسخ:', err);
+  });
+}
+
+// ==========================================
+// الأرشيف والتعديل
+// ==========================================
+function renderSavedPlansList() {
+  const listDiv = document.getElementById('plansList');
+  if (!listDiv) return;
+
+  const plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+
+  if (plans.length === 0) {
+    listDiv.innerHTML = '<p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>';
+    return;
+  }
+
+  let html = '';
+  plans.forEach((data) => {
+    const skillLabel = data.customSkill ? data.customSkill : data.targetSkill;
+    html += `
+      <div class="plan-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h4 style="margin: 0 0 5px 0; color: #00d2ff;">${data.clientName} <span style="font-size: 0.8rem; color: #f59e0b;">(${skillLabel})</span></h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">التاريخ: ${data.date} | الوزن: ${data.weight} كغم</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="viewOrEditPlan('${data.id}')" style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">عرض / تعديل</button>
+          <button onclick="deletePlan('${data.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">حذف</button>
+        </div>
+      </div>
+    `;
+  });
+  listDiv.innerHTML = html;
+}
+
+function viewOrEditPlan(id) {
+  const plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+  const plan = plans.find(p => p.id === id);
+  if (!plan) return;
+
+  editingPlanId = plan.id;
+
+  setInputValue('clientName', plan.clientName);
+  setInputValue('clientAge', plan.age);
+  setInputValue('clientWeight', plan.weight);
+  setInputValue('clientHeight', plan.height);
+
+  setInputValue('targetSkill', plan.targetSkill || 'handstand');
+  setInputValue('customSkillName', plan.customSkill || '');
+
+  setInputValue('skillHoldTime', plan.skillHoldTime || 0);
+  setInputValue('skillReps', plan.skillReps || 0);
+
+  setInputValue('pullups', plan.pullups || 0);
+  setInputValue('dips', plan.dips || 0);
+  setInputValue('pushups', plan.pushups || 0);
+  setInputValue('squats', plan.squats || 0);
+  setInputValue('plank', plan.plank || 0);
+  setInputValue('hollow', plan.hollow || 0);
+  setInputValue('superman', plan.superman || 0);
+  setInputValue('hang', plan.hang || 0);
+
+  displayGeneratedPlan(plan);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setInputValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.value = (val !== undefined && val !== null) ? val : '';
+  }
+}
+
+function deletePlan(id) {
+  if (confirm("هل أنت متأكد من حذف هذه الخطة من الأرشيف؟")) {
+    let plans = JSON.parse(localStorage.getItem('calisthenics_saved_plans') || '[]');
+    plans = plans.filter(p => p.id !== id);
+    localStorage.setItem('calisthenics_saved_plans', JSON.stringify(plans));
+
+    if (editingPlanId === id) {
+      editingPlanId = null;
+    }
+
+    renderSavedPlansList();
+  }
+}
+خطة بنجاح!');
   }).catch(err => {
     console.error('فشل النسخ:', err);
   });
