@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>نظام خطط الكاليستوينكس الاحترافي</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <!-- خط تاجاول العصري -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 </head>
@@ -20,7 +20,7 @@
     <!-- مشغل الموسيقى الاختياري -->
     <div class="music-control-panel" style="margin-bottom: 20px; text-align: center;">
       <audio id="bgMusic" loop src="https://www.bensound.com/bensound-music/bensound-dubstep.mp3"></audio>
-      <button onclick="toggleBackgroundMusic()" id="musicBtn" style="background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit;">
+      <button onclick="toggleBackgroundMusic()" id="musicBtn" style="background: rgba(30,41,59,0.8); color: #38bdf8; border: 1px solid #38bdf8; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit;">
         🎵 <span id="musicText">تشغيل الموسيقى</span>
       </button>
     </div>
@@ -34,16 +34,16 @@
         <input type="text" id="clientName" placeholder="أدخل اسم العميل">
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px;">
-        <div class="input-group" style="flex: 1;">
+      <div class="input-row-3">
+        <div class="input-group">
           <label for="clientAge">العمر (سنة):</label>
           <input type="number" id="clientAge" value="20">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="clientWeight">الوزن (كغم):</label>
           <input type="number" id="clientWeight" value="70">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="clientHeight">الطول (سم):</label>
           <input type="number" id="clientHeight" value="170">
         </div>
@@ -61,17 +61,17 @@
       </div>
 
       <!-- خانة كتابة مهارة مخصصة جديدة -->
-      <div class="input-group" id="customSkillContainer" style="margin-top: 15px;">
-        <label for="customSkillName" style="color: #00d2ff; font-weight: bold; display: block; margin-bottom: 5px;">أو اكتب اسم مهارة مخصصة جديدة:</label>
-        <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever..." style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; font-family: inherit; box-sizing: border-box;">
+      <div class="input-group">
+        <label for="customSkillName" style="color: var(--primary-color);">أو اكتب اسم مهارة مخصصة جديدة:</label>
+        <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever...">
       </div>
 
-      <div class="input-row" style="display: flex; gap: 10px; margin-top: 15px;">
-        <div class="input-group" style="flex: 1;">
-          <label for="skillHoldTime">زمن الثبات الحالي للمهارة (ثواني):</label>
+      <div class="input-row">
+        <div class="input-group">
+          <label for="skillHoldTime">زمن الثبات الحالي (ثواني):</label>
           <input type="number" id="skillHoldTime" value="0">
         </div>
-        <div class="input-group" style="flex: 1;">
+        <div class="input-group">
           <label for="skillReps">أقصى عدات/محاولات للمهارة:</label>
           <input type="number" id="skillReps" value="0">
         </div>
@@ -79,54 +79,52 @@
 
       <h2 style="margin-top: 25px;">💪 اختبارات القوة البدنية (Strength Tests)</h2>
       
-      <div class="input-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+      <div class="input-row">
+        <div class="input-group">
           <label for="pullups">العقلة / الثابت (أقصى عدد):</label>
           <input type="number" id="pullups" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="dips">المتوازي (أقصى عدد):</label>
           <input type="number" id="dips" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="pushups">الضغط (أقصى عدد):</label>
           <input type="number" id="pushups" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="squats">السكوات (أقصى عدد):</label>
           <input type="number" id="squats" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="plank">البلانك (ثواني):</label>
           <input type="number" id="plank" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="hollow">هولو بودي (ثواني):</label>
           <input type="number" id="hollow" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="superman">سوبرمان (ثواني):</label>
           <input type="number" id="superman" value="0">
         </div>
-        <div class="input-group" style="flex: 1; min-width: 45%;">
+        <div class="input-group">
           <label for="hang">التعلق المباشر (ثواني):</label>
           <input type="number" id="hang" value="0">
         </div>
       </div>
 
       <!-- زر إنشاء وتوليد الخطة -->
-      <button onclick="generateAndSavePlan()" class="btn-primary" style="width: 100%; margin-top: 25px; padding: 14px; background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; font-family: inherit;">
+      <button onclick="generateAndSavePlan()" class="btn-primary">
         🚀 إنشاء / تحديث الخطة التدريبية
       </button>
     </div>
 
     <!-- مكان عرض الخطة الناتجة (يحتوي أزرار الطباعة والنسخ) -->
-    <div id="planOutput" class="hidden" style="margin-top: 30px; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-      <!-- يتم تعبئته برمجياً عبر ملف script.js -->
-    </div>
+    <div id="planOutput" class="hidden"></div>
 
     <!-- أرشيف الخطط المحفوظة محلياً -->
-    <div class="archive-section" style="margin-top: 40px;">
+    <div class="archive-section">
       <h2>📂 أرشيف الخطط المحفوظة محلياً</h2>
       <div id="plansList">
         <p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>
@@ -135,7 +133,7 @@
 
   </div>
 
-  <!-- ربط ملف الجافاسكريبت -->
-  <script src="script.js?v=99"></script>
+  <!-- ربط ملف الجافاسكريبت مع رقم إصدار لتجاوز الكاش -->
+  <script src="script.js?v=2"></script>
 </body>
 </html>
