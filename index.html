@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام خطط الكاليستوينكس الاحترافي</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <title>نظام خطط الكاليستوينكس الذكي (AI Edition)</title>
+  <link rel="stylesheet" href="style.css?v=3">
   <!-- خط تاجاول العصري -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
 </head>
@@ -13,8 +13,8 @@
   <div class="container">
     <!-- رأس الصفحة -->
     <header class="app-header">
-      <h1>⚡ نظام خطط الكاليستوينكس الاحترافي</h1>
-      <p id="connectionStatus" class="status-online">🟢 متصل بالنظام المحلي السريع</p>
+      <h1>⚡ نظام خطط الكاليستوينكس الذكي (AI)</h1>
+      <p id="connectionStatus" class="status-online">🤖 محرك تحليل البيانات الذكي محلياً</p>
     </header>
 
     <!-- مشغل الموسيقى الاختياري -->
@@ -25,9 +25,9 @@
       </button>
     </div>
 
-    <!-- نموذج إدخال بيانات المتدرب والمهارات -->
+    <!-- نموذج إدخال البيانات واختبارات القوة فقط -->
     <div class="form-card">
-      <h2>👤 البيانات الشخصية والبدنية</h2>
+      <h2>👤 القياسات الشخصية والبدنية</h2>
       
       <div class="input-group">
         <label for="clientName">اسم المتدرب / العميل:</label>
@@ -46,34 +46,6 @@
         <div class="input-group">
           <label for="clientHeight">الطول (سم):</label>
           <input type="number" id="clientHeight" value="170">
-        </div>
-      </div>
-
-      <h2 style="margin-top: 25px;">🎯 اختيار المهارة المستهدفة</h2>
-      
-      <div class="input-group">
-        <label for="targetSkill">المهارة الأساسية:</label>
-        <select id="targetSkill">
-          <option value="handstand">هاندستاند (Handstand)</option>
-          <option value="parallel_hold">ثبات المتوازي (L-Sit)</option>
-          <option value="other">مهارة أخرى</option>
-        </select>
-      </div>
-
-      <!-- خانة كتابة مهارة مخصصة جديدة -->
-      <div class="input-group">
-        <label for="customSkillName" style="color: var(--primary-color);">أو اكتب اسم مهارة مخصصة جديدة:</label>
-        <input type="text" id="customSkillName" placeholder="مثال: Planche, Front Lever...">
-      </div>
-
-      <div class="input-row">
-        <div class="input-group">
-          <label for="skillHoldTime">زمن الثبات الحالي (ثواني):</label>
-          <input type="number" id="skillHoldTime" value="0">
-        </div>
-        <div class="input-group">
-          <label for="skillReps">أقصى عدات/محاولات للمهارة:</label>
-          <input type="number" id="skillReps" value="0">
         </div>
       </div>
 
@@ -114,18 +86,18 @@
         </div>
       </div>
 
-      <!-- زر إنشاء وتوليد الخطة -->
-      <button onclick="generateAndSavePlan()" class="btn-primary">
-        🚀 إنشاء / تحديث الخطة التدريبية
+      <!-- زر إنشاء وتوليد الخطة الذكية -->
+      <button onclick="generateAndSavePlan()" class="btn-primary" style="margin-top: 35px;">
+        🤖 تحليل البيانات وتوليد الخطة بالذكاء الاصطناعي
       </button>
     </div>
 
-    <!-- مكان عرض الخطة الناتجة (يحتوي أزرار الطباعة والنسخ) -->
+    <!-- مكان عرض الخطة الناتجة -->
     <div id="planOutput" class="hidden"></div>
 
     <!-- أرشيف الخطط المحفوظة محلياً -->
     <div class="archive-section">
-      <h2>📂 أرشيف الخطط المحفوظة محلياً</h2>
+      <h2>📂 أرشيف الخطط المفسرة ذكياً</h2>
       <div id="plansList">
         <p class="empty-msg">لا توجد خطط محفوظة حالياً.</p>
       </div>
@@ -133,7 +105,7 @@
 
   </div>
 
-  <!-- ربط ملف الجافاسكريبت مع رقم إصدار لتجاوز الكاش -->
-  <script src="script.js?v=2"></script>
+  <!-- ربط ملف الجافاسكريبت المحدث -->
+  <script src="script.js?v=3"></script>
 </body>
 </html>
